@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { BouncingDots } from "@/components/ui/bouncing-dots";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import {
@@ -199,10 +200,17 @@ export function OgucChat() {
           <div
             className={cn(
               "bg-neutral-900 border border-neutral-800 rounded-xl p-5 text-sm leading-relaxed text-neutral-100 whitespace-pre-wrap",
-              loading && "animate-pulse text-neutral-400"
+              loading && "text-neutral-400"
             )}
           >
-            {loading && "Buscando en la OGUC…"}
+            {loading && (
+              <BouncingDots
+                className="w-2 h-2 bg-neutral-500"
+                animate={{ y: [0, -8, 0] }}
+                message="Buscando en la normativa…"
+                messagePlacement="right"
+              />
+            )}
             {error && `⚠️ ${error}`}
             {result && (
               <>
