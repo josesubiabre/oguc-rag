@@ -1,11 +1,27 @@
 "use client";
 
-import { forwardRef, useImperativeHandle } from "react";
+import { forwardRef, useImperativeHandle, useSyncExternalStore } from "react";
 import { ArrowUp, BookOpen, Plus } from "lucide-react";
 
 import { Textarea } from "@/components/ui/textarea";
 import { useAutoResizeTextarea } from "@/hooks/use-auto-resize-textarea";
 import { cn } from "@/lib/utils";
+
+/* En móvil el placeholder largo se quiebra a dos líneas y el composer
+   compacto solo muestra una: usamos una versión corta bajo 768px. */
+function subscribeToViewport(callback: () => void) {
+  const media = window.matchMedia("(max-width: 767px)");
+  media.addEventListener("change", callback);
+  return () => media.removeEventListener("change", callback);
+}
+
+function useIsMobile() {
+  return useSyncExternalStore(
+    subscribeToViewport,
+    () => window.matchMedia("(max-width: 767px)").matches,
+    () => false
+  );
+}
 
 export interface ChatComposerHandle {
   focus: () => void;
@@ -31,6 +47,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
       resetHeight: () => adjustHeight(true),
     }));
 
+    const isMobile = useIsMobile();
     const canSend = value.trim().length > 0 && !loading;
 
     return (
@@ -49,7 +66,11 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
               if (canSend) onSubmit();
             }
           }}
-          placeholder="Pregúntale a Norma sobre normativa de construcción…"
+          placeholder={
+            isMobile
+              ? "Pregúntale a Norma…"
+              : "Pregúntale a Norma sobre normativa de construcción…"
+          }
           aria-label="Pregunta sobre normativa de construcción"
           className={cn(
             "min-h-[48px] w-full resize-none border-none bg-transparent px-4 py-3",
