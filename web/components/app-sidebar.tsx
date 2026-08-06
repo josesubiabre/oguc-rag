@@ -25,25 +25,24 @@ const CORPUS = [
   ["Circulares DDU", "~250 circulares generales vigentes del MINVU"],
 ] as const;
 
-/* Consultas de demostración para el estado vacío del historial.
-   Cuando exista almacenamiento de conversaciones, esta lista se
-   reemplaza por los datos reales. */
-const DEMO_RECENTS = [
-  "Permiso de obra menor",
-  "Ruta accesible",
-  "Bienes comunes",
-  "Interpretación DDU",
-];
+interface ConversationSummary {
+  id: string;
+  title: string;
+}
 
 interface AppSidebarProps {
-  onSelectRecent: (topic: string) => void;
+  conversations: ConversationSummary[];
+  activeId: string | null;
+  onSelectConversation: (id: string) => void;
   onNewChat: () => void;
   mobileOpen: boolean;
   onMobileClose: () => void;
 }
 
 export function AppSidebar({
-  onSelectRecent,
+  conversations,
+  activeId,
+  onSelectConversation,
   onNewChat,
   mobileOpen,
   onMobileClose,
@@ -54,10 +53,10 @@ export function AppSidebar({
 
   const recents = useMemo(
     () =>
-      DEMO_RECENTS.filter((r) =>
-        r.toLowerCase().includes(query.trim().toLowerCase())
+      conversations.filter((c) =>
+        c.title.toLowerCase().includes(query.trim().toLowerCase())
       ),
-    [query]
+    [conversations, query]
   );
 
   // Drawer mobile: cerrar con Escape y bloquear el scroll del body
@@ -139,21 +138,26 @@ export function AppSidebar({
               Recientes
             </h2>
             <ul className="mt-2">
-              {recents.map((topic) => (
-                <li key={topic} className="border-b border-line-subtle last:border-b-0">
+              {recents.map((c) => (
+                <li key={c.id} className="border-b border-line-subtle last:border-b-0">
                   <button
                     type="button"
-                    onClick={() => onSelectRecent(topic)}
-                    className="flex h-11 w-full items-center gap-3 rounded-md px-1 text-left text-[14px] text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand"
+                    onClick={() => onSelectConversation(c.id)}
+                    className={cn(
+                      "flex h-11 w-full items-center gap-3 rounded-md px-1 text-left text-[14px] text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand",
+                      c.id === activeId && "bg-surface-hover text-text-primary"
+                    )}
                   >
                     <MessageSquare className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span className="truncate">{topic}</span>
+                    <span className="truncate">{c.title}</span>
                   </button>
                 </li>
               ))}
               {recents.length === 0 && (
                 <li className="px-1 py-2 text-[13px] text-text-subtle">
-                  Sin resultados
+                  {conversations.length === 0
+                    ? "Aún no tienes consultas guardadas"
+                    : "Sin resultados"}
                 </li>
               )}
             </ul>
