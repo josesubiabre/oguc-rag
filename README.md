@@ -33,15 +33,25 @@ python query.py     # pregunta en lenguaje natural (terminal)
 
 ### Interfaz web
 
+Backend (API):
+
 ```bash
 uvicorn app:app --reload
 ```
 
-Abre http://localhost:8000
+Frontend (Next.js + Tailwind + shadcn, en `web/`):
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Abre http://localhost:3000 (el frontend reenvía `/api/*` al backend del puerto 8000).
 
 ## Roadmap
 
 - [x] RAG funcionando (ingesta + consultas con citas de artículos)
-- [x] Interfaz web local
+- [x] Interfaz web local (Next.js + Tailwind + shadcn, diseño estilo v0)
 - [ ] Despliegue público (hosting gratuito)
 - [ ] Analítica de uso
