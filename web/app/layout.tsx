@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Asistente OGUC — Pregúntale a la Ordenanza",
+  title: "NormaObra — Normativa de construcción",
   description:
-    "Pregunta en lenguaje simple a la Ordenanza General de Urbanismo y Construcciones de Chile",
+    "Pregúntale a Norma sobre la normativa chilena de urbanismo y construcción: OGUC, LGUC, circulares DDU, copropiedad y accesibilidad universal.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -24,7 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-neutral-950">{children}</body>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }

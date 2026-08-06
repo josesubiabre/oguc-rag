@@ -1,0 +1,103 @@
+"use client";
+
+import { forwardRef, useImperativeHandle } from "react";
+import { ArrowUp, BookOpen, Plus } from "lucide-react";
+
+import { Textarea } from "@/components/ui/textarea";
+import { useAutoResizeTextarea } from "@/hooks/use-auto-resize-textarea";
+import { cn } from "@/lib/utils";
+
+export interface ChatComposerHandle {
+  focus: () => void;
+  resetHeight: () => void;
+}
+
+interface ChatComposerProps {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit: () => void;
+  loading: boolean;
+}
+
+export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
+  function ChatComposer({ value, onChange, onSubmit, loading }, ref) {
+    const { textareaRef, adjustHeight } = useAutoResizeTextarea({
+      minHeight: 120,
+      maxHeight: 280,
+    });
+
+    useImperativeHandle(ref, () => ({
+      focus: () => textareaRef.current?.focus(),
+      resetHeight: () => adjustHeight(true),
+    }));
+
+    const canSend = value.trim().length > 0 && !loading;
+
+    return (
+      <div className="w-full rounded-2xl border border-line bg-surface shadow-[0_8px_30px_rgba(0,0,0,0.25)]">
+        <Textarea
+          ref={textareaRef}
+          value={value}
+          maxLength={500}
+          onChange={(e) => {
+            onChange(e.target.value);
+            adjustHeight();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              if (canSend) onSubmit();
+            }
+          }}
+          placeholder="Pregúntale a Norma sobre normativa de construcción…"
+          aria-label="Pregunta sobre normativa de construcción"
+          className={cn(
+            "min-h-[120px] w-full resize-none border-none bg-transparent px-5 py-4",
+            "text-[17px] leading-relaxed text-text-primary",
+            "placeholder:text-text-subtle placeholder:text-[17px]",
+            "focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+          )}
+          style={{ overflow: "hidden" }}
+        />
+
+        <div className="flex items-center justify-between border-t border-line-subtle p-3">
+          <div className="flex items-center gap-1">
+            {/* Controles preparados; adquieren función con adjuntos y filtro de fuentes */}
+            <button
+              type="button"
+              disabled
+              aria-label="Adjuntar (próximamente)"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle transition-colors hover:bg-surface-hover disabled:hover:bg-transparent"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <span className="h-5 w-px bg-line-subtle" aria-hidden="true" />
+            <button
+              type="button"
+              disabled
+              aria-label="Fuentes normativas (próximamente)"
+              className="flex h-11 items-center gap-2 rounded-lg px-3 text-[14px] text-text-secondary transition-colors hover:bg-surface-hover disabled:hover:bg-transparent"
+            >
+              <BookOpen className="h-4 w-4" aria-hidden="true" />
+              Fuentes
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={!canSend}
+            aria-label="Enviar consulta"
+            className={cn(
+              "flex h-11 w-11 items-center justify-center rounded-full bg-brand text-white transition-colors",
+              "hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-brand",
+              !canSend && "cursor-not-allowed opacity-40 hover:bg-brand"
+            )}
+          >
+            <ArrowUp className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+);
