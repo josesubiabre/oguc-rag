@@ -14,7 +14,16 @@ import {
 } from "lucide-react";
 
 import { BrandMark, BrandWordmark } from "@/components/brand";
+import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+
+const CORPUS = [
+  ["OGUC", "Ordenanza General de Urbanismo y Construcciones (marzo 2026)"],
+  ["LGUC", "Ley General de Urbanismo y Construcciones (septiembre 2025)"],
+  ["Ley N° 21.442", "Copropiedad Inmobiliaria"],
+  ["DS 50", "Accesibilidad Universal"],
+  ["Circulares DDU", "~250 circulares generales vigentes del MINVU"],
+] as const;
 
 /* Consultas de demostración para el estado vacío del historial.
    Cuando exista almacenamiento de conversaciones, esta lista se
@@ -41,6 +50,7 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [query, setQuery] = useState("");
+  const [modal, setModal] = useState<"fuentes" | "como" | null>(null);
 
   const recents = useMemo(
     () =>
@@ -159,11 +169,13 @@ export function AppSidebar({
             icon={<BookOpen className="h-4 w-4" aria-hidden="true" />}
             label="Fuentes normativas"
             collapsed={collapsed}
+            onClick={() => setModal("fuentes")}
           />
           <SidebarNavItem
             icon={<CircleHelp className="h-4 w-4" aria-hidden="true" />}
             label="Cómo funciona"
             collapsed={collapsed}
+            onClick={() => setModal("como")}
           />
           <SidebarNavItem
             icon={<Code2 className="h-4 w-4" aria-hidden="true" />}
@@ -219,6 +231,60 @@ export function AppSidebar({
         {content}
       </aside>
 
+      {/* Modales de navegación */}
+      <Modal
+        title="Fuentes normativas"
+        open={modal === "fuentes"}
+        onClose={() => setModal(null)}
+      >
+        <p>
+          Norma responde exclusivamente a partir de estos cuerpos normativos
+          oficiales:
+        </p>
+        <ul className="mt-3 space-y-2">
+          {CORPUS.map(([name, desc]) => (
+            <li key={name} className="flex gap-2">
+              <span className="shrink-0 font-medium text-text-primary">{name}</span>
+              <span>— {desc}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 text-[13px] text-text-subtle">
+          Algunas circulares antiguas son escaneos sin texto extraíble y aún no
+          forman parte del índice de búsqueda.
+        </p>
+      </Modal>
+
+      <Modal
+        title="Cómo funciona"
+        open={modal === "como"}
+        onClose={() => setModal(null)}
+      >
+        <ol className="list-decimal space-y-2 pl-5">
+          <li>
+            Tu pregunta se compara semánticamente contra los ~6.800 fragmentos
+            indexados del corpus normativo.
+          </li>
+          <li>
+            Los fragmentos más relevantes se entregan a un modelo de lenguaje,
+            que redacta la respuesta usando únicamente ese contexto.
+          </li>
+          <li>
+            Cada respuesta cita el documento y las páginas de origen, para que
+            puedas verificar contra la fuente oficial.
+          </li>
+        </ol>
+        <p className="mt-4">
+          Si la normativa indexada no cubre tu pregunta, Norma lo dice en vez de
+          inventar una respuesta.
+        </p>
+        <p className="mt-4 text-[13px] text-text-subtle">
+          Herramienta informativa no oficial, sin afiliación con el MINVU. Las
+          respuestas pueden contener errores: verifica siempre la normativa
+          vigente y consulta a un profesional competente.
+        </p>
+      </Modal>
+
       {/* Drawer mobile */}
       {mobileOpen && (
         <div className="md:hidden" role="dialog" aria-modal="true" aria-label="Menú">
@@ -241,11 +307,13 @@ function SidebarNavItem({
   label,
   collapsed,
   href,
+  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   collapsed: boolean;
   href?: string;
+  onClick?: () => void;
 }) {
   const className = cn(
     "flex h-11 w-full items-center gap-3 rounded-lg px-2 text-[14px] text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand",
@@ -267,10 +335,14 @@ function SidebarNavItem({
       </li>
     );
   }
-  // Accesos aún sin destino propio: control presente, sin interacción falsa
   return (
     <li>
-      <button type="button" className={className} aria-label={label} disabled>
+      <button
+        type="button"
+        className={className}
+        aria-label={label}
+        onClick={onClick}
+      >
         {icon}
         {!collapsed && <span>{label}</span>}
       </button>
