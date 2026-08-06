@@ -14,8 +14,14 @@ from core.config import EMBED_DIM, EMBED_MODEL, GEMINI_API_KEY
 _BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 
 
+def _headers():
+    # La key va en el header y no en la URL: las URLs quedan registradas en
+    # logs de errores y proxies; los headers no.
+    return {"x-goog-api-key": GEMINI_API_KEY}
+
+
 def _embed(text, task_type):
-    url = f"{_BASE}/{EMBED_MODEL}:embedContent?key={GEMINI_API_KEY}"
+    url = f"{_BASE}/{EMBED_MODEL}:embedContent"
     body = {
         "model": f"models/{EMBED_MODEL}",
         "content": {"parts": [{"text": text}]},
@@ -25,7 +31,7 @@ def _embed(text, task_type):
     last_error = "sin detalle"
     for attempt in range(8):
         try:
-            r = requests.post(url, json=body, timeout=60)
+            r = requests.post(url, json=body, headers=_headers(), timeout=60)
         except requests.exceptions.RequestException as e:
             last_error = str(e)
             wait = min(5 * (attempt + 1), 30)
@@ -55,7 +61,7 @@ def embed_documents(texts):
     Intenta el endpoint batch; si el tier lo rechaza, cae a peticiones
     de a una con pausa entre ellas.
     """
-    url = f"{_BASE}/{EMBED_MODEL}:batchEmbedContents?key={GEMINI_API_KEY}"
+    url = f"{_BASE}/{EMBED_MODEL}:batchEmbedContents"
     body = {
         "requests": [
             {
@@ -68,7 +74,7 @@ def embed_documents(texts):
         ]
     }
     try:
-        r = requests.post(url, json=body, timeout=120)
+        r = requests.post(url, json=body, headers=_headers(), timeout=120)
         if r.status_code == 200:
             return [e["values"] for e in r.json()["embeddings"]]
     except requests.exceptions.RequestException:

@@ -10,7 +10,9 @@ from pydantic import BaseModel
 
 from core.rag import answer
 
-app = FastAPI(title="Asistente OGUC")
+# Sin documentación interactiva pública: el API tiene un solo endpoint y
+# exponer /docs solo facilita el reconocimiento a terceros.
+app = FastAPI(title="NormaObra API", docs_url=None, redoc_url=None, openapi_url=None)
 
 
 class Question(BaseModel):
@@ -19,7 +21,7 @@ class Question(BaseModel):
 
 @app.get("/")
 def home():
-    return {"status": "ok", "service": "API Asistente OGUC", "docs": "/docs"}
+    return {"status": "ok", "service": "NormaObra API"}
 
 
 @app.post("/api/ask")
