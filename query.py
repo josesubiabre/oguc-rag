@@ -1,46 +1,67 @@
 """Consulta la OGUC en lenguaje natural desde la terminal.
 
-Uso:
+Requiere haber ejecutado antes ingest.py. Uso:
     python query.py
 """
 
+import json
 import os
 
+import numpy as np
+import requests
 from dotenv import load_dotenv
-from langchain_chroma import Chroma
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_groq import ChatGroq
-from langchain_huggingface import HuggingFaceEmbeddings
+from groq import Groq
 
 load_dotenv()
 
-DB_DIR = "chroma_db"
-EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+STORE_DIR = "store"
+EMBED_MODEL = "gemini-embedding-001"
+EMBED_DIM = 768
+LLM_MODEL = "llama-3.3-70b-versatile"
+TOP_K = 5
 
-PROMPT = ChatPromptTemplate.from_template(
-    """Eres un asistente experto en la Ordenanza General de Urbanismo y \
-Construcciones (OGUC) de Chile. Responde la pregunta usando ÚNICAMENTE el \
-contexto entregado. Cita siempre el número de artículo cuando sea posible. \
-Si el contexto no contiene la respuesta, dilo claramente y no inventes.
-
-Contexto:
-{context}
-
-Pregunta: {question}
-
-Respuesta:"""
+SYSTEM_PROMPT = (
+    "Eres un asistente experto en la Ordenanza General de Urbanismo y "
+    "Construcciones (OGUC) de Chile. Responde usando ÚNICAMENTE el contexto "
+    "entregado. Cita siempre el número de artículo cuando sea posible. Si el "
+    "contexto no contiene la respuesta, dilo claramente y no inventes."
 )
 
 
+def embed_query(text, api_key):
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{EMBED_MODEL}:embedContent?key={api_key}"
+    )
+    body = {
+        "model": f"models/{EMBED_MODEL}",
+        "content": {"parts": [{"text": text}]},
+        "taskType": "RETRIEVAL_QUERY",
+        "outputDimensionality": EMBED_DIM,
+    }
+    r = requests.post(url, json=body, timeout=60)
+    r.raise_for_status()
+    v = np.array(r.json()["embedding"]["values"], dtype=np.float32)
+    return v / np.linalg.norm(v)
+
+
 def main():
-    if not os.getenv("GROQ_API_KEY") or "pega_tu_key" in os.getenv("GROQ_API_KEY", ""):
-        print("Falta tu API key: edita el archivo .env y pega tu key de console.groq.com")
+    gemini_key = os.getenv("GEMINI_API_KEY", "")
+    groq_key = os.getenv("GROQ_API_KEY", "")
+    if not gemini_key or "pega_tu_key" in gemini_key:
+        print("Falta GEMINI_API_KEY en .env (aistudio.google.com)")
+        return
+    if not groq_key or "pega_tu_key" in groq_key:
+        print("Falta GROQ_API_KEY en .env (console.groq.com)")
+        return
+    if not os.path.exists(os.path.join(STORE_DIR, "embeddings.npy")):
+        print("No existe la base vectorial: ejecuta primero  python ingest.py")
         return
 
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-    db = Chroma(persist_directory=DB_DIR, embedding_function=embeddings)
-    retriever = db.as_retriever(search_kwargs={"k": 5})
-    llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0)
+    matrix = np.load(os.path.join(STORE_DIR, "embeddings.npy"))
+    with open(os.path.join(STORE_DIR, "chunks.json"), encoding="utf-8") as f:
+        chunks = json.load(f)
+    client = Groq(api_key=groq_key)
 
     print("Pregúntale a la OGUC (escribe 'salir' para terminar)\n")
     while True:
@@ -48,12 +69,24 @@ def main():
         if not question or question.lower() in ("salir", "exit", "quit"):
             break
 
-        docs = retriever.invoke(question)
-        context = "\n\n---\n\n".join(d.page_content for d in docs)
-        answer = llm.invoke(PROMPT.format(context=context, question=question))
+        qvec = embed_query(question, gemini_key)
+        scores = matrix @ qvec
+        top = np.argsort(scores)[::-1][:TOP_K]
+        context = "\n\n---\n\n".join(chunks[i]["text"] for i in top)
 
-        print(f"\n{answer.content}\n")
-        pages = sorted({d.metadata.get("page", "?") + 1 for d in docs if isinstance(d.metadata.get("page"), int)})
+        resp = client.chat.completions.create(
+            model=LLM_MODEL,
+            temperature=0,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": f"Contexto:\n{context}\n\nPregunta: {question}",
+                },
+            ],
+        )
+        print(f"\n{resp.choices[0].message.content}\n")
+        pages = sorted({chunks[i]["page"] for i in top})
         print(f"(Fuentes: páginas {', '.join(map(str, pages))} del PDF)\n")
 
 

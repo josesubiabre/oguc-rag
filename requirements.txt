@@ -1,8 +1,5 @@
-langchain
-langchain-community
-langchain-groq
-langchain-chroma
-langchain-huggingface
-sentence-transformers
+groq
 pypdf
 python-dotenv
+numpy
+requests
