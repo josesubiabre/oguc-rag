@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { ChatComposer, ChatComposerHandle } from "@/components/chat-composer";
+import { LegalDisclaimerModal } from "@/components/legal-disclaimer";
 import { BouncingDots } from "@/components/ui/bouncing-dots";
 import {
   ChatMessage,
@@ -18,6 +19,7 @@ export function NormaObraApp() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [legalOpen, setLegalOpen] = useState(false);
   const composerRef = useRef<ChatComposerHandle>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const { conversations, upsert, get } = useConversations();
@@ -204,8 +206,20 @@ export function NormaObraApp() {
         )}
 
         <p className="shrink-0 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2 text-center text-[13px] text-text-secondary">
-          Verifica siempre la normativa vigente y su aplicación a tu caso.
+          Verifica siempre la normativa vigente y su aplicación a tu caso.{" "}
+          <button
+            type="button"
+            onClick={() => setLegalOpen(true)}
+            className="underline underline-offset-2 transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand"
+          >
+            Aviso legal
+          </button>
         </p>
+
+        <LegalDisclaimerModal
+          open={legalOpen}
+          onClose={() => setLegalOpen(false)}
+        />
       </main>
     </div>
   );

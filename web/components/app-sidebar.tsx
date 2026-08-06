@@ -10,10 +10,12 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
+  Scale,
   Search,
 } from "lucide-react";
 
 import { BrandMark, BrandWordmark } from "@/components/brand";
+import { LegalDisclaimerModal } from "@/components/legal-disclaimer";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +51,7 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [query, setQuery] = useState("");
-  const [modal, setModal] = useState<"fuentes" | "como" | null>(null);
+  const [modal, setModal] = useState<"fuentes" | "como" | "legal" | null>(null);
 
   const recents = useMemo(
     () =>
@@ -182,6 +184,12 @@ export function AppSidebar({
             onClick={() => setModal("como")}
           />
           <SidebarNavItem
+            icon={<Scale className="h-4 w-4" aria-hidden="true" />}
+            label="Aviso legal"
+            collapsed={collapsed}
+            onClick={() => setModal("legal")}
+          />
+          <SidebarNavItem
             icon={<Code2 className="h-4 w-4" aria-hidden="true" />}
             label="GitHub"
             collapsed={collapsed}
@@ -288,6 +296,11 @@ export function AppSidebar({
           vigente y consulta a un profesional competente.
         </p>
       </Modal>
+
+      <LegalDisclaimerModal
+        open={modal === "legal"}
+        onClose={() => setModal(null)}
+      />
 
       {/* Drawer mobile */}
       {mobileOpen && (
