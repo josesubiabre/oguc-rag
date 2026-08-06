@@ -1,27 +1,16 @@
-"""Interfaz web del asistente OGUC.
+"""API web del asistente OGUC.
 
 Uso local:
     uvicorn app:app --reload
-Luego abre http://localhost:8000
+El frontend vive en web/ (Next.js) y reenvía /api/* a este servidor.
 """
 
-import os
-
-from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
-from groq import Groq
 from pydantic import BaseModel
 
-from query import answer, load_store
-
-load_dotenv()
+from core.rag import answer
 
 app = FastAPI(title="Asistente OGUC")
-
-matrix, chunks = load_store()
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
 
 class Question(BaseModel):
@@ -30,7 +19,7 @@ class Question(BaseModel):
 
 @app.get("/")
 def home():
-    return FileResponse("static/index.html")
+    return {"status": "ok", "service": "API Asistente OGUC", "docs": "/docs"}
 
 
 @app.post("/api/ask")
@@ -39,7 +28,7 @@ def ask(q: Question):
     if not question or len(question) > 500:
         raise HTTPException(400, "La pregunta debe tener entre 1 y 500 caracteres")
     try:
-        text, pages = answer(question, matrix, chunks, GEMINI_KEY, client)
+        text, pages = answer(question)
     except Exception:
         raise HTTPException(503, "El servicio está saturado, intenta de nuevo en unos segundos")
     return {"answer": text, "pages": pages}

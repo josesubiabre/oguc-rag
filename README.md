@@ -5,9 +5,28 @@ Asistente de preguntas y respuestas sobre la **Ordenanza General de Urbanismo y 
 ## Arquitectura
 
 - **PDF → fragmentos**: `pypdf` + corte por límites de "Artículo N°"
-- **Embeddings**: API de Google Gemini (`gemini-embedding-001`, gratis)
+- **Embeddings**: API de Google Gemini (`gemini-embedding-001`)
 - **Base vectorial**: matriz numpy + búsqueda por similitud coseno (sin dependencias nativas — funciona incluso en Windows ARM64)
 - **LLM**: Llama 3.3 70B vía Groq (gratis)
+
+### Estructura
+
+```
+core/               # lógica del RAG, un módulo por responsabilidad
+├── config.py       # toda la configuración
+├── chunking.py     # PDF → fragmentos
+├── embeddings.py   # cliente Gemini (cambiar de proveedor = tocar solo esto)
+├── store.py        # base vectorial (búsqueda híbrida futura = tocar solo esto)
+├── llm.py          # prompt + Groq
+└── rag.py          # orquestación pregunta → respuesta
+ingest.py           # script de ingesta (usa core/)
+query.py            # CLI de consultas (usa core/)
+app.py              # API FastAPI (usa core/)
+tests/              # pytest, sin consumo de APIs
+web/                # frontend Next.js + Tailwind + shadcn
+```
+
+Tests: `python -m pytest tests/`
 
 ## Uso
 
