@@ -45,6 +45,32 @@ def embed_query(text, api_key):
     return v / np.linalg.norm(v)
 
 
+def load_store():
+    matrix = np.load(os.path.join(STORE_DIR, "embeddings.npy"))
+    with open(os.path.join(STORE_DIR, "chunks.json"), encoding="utf-8") as f:
+        chunks = json.load(f)
+    return matrix, chunks
+
+
+def answer(question, matrix, chunks, gemini_key, client):
+    """Devuelve (respuesta, páginas fuente) para una pregunta."""
+    qvec = embed_query(question, gemini_key)
+    scores = matrix @ qvec
+    top = np.argsort(scores)[::-1][:TOP_K]
+    context = "\n\n---\n\n".join(chunks[i]["text"] for i in top)
+
+    resp = client.chat.completions.create(
+        model=LLM_MODEL,
+        temperature=0,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": f"Contexto:\n{context}\n\nPregunta: {question}"},
+        ],
+    )
+    pages = sorted({chunks[i]["page"] for i in top})
+    return resp.choices[0].message.content, pages
+
+
 def main():
     gemini_key = os.getenv("GEMINI_API_KEY", "")
     groq_key = os.getenv("GROQ_API_KEY", "")
@@ -58,9 +84,7 @@ def main():
         print("No existe la base vectorial: ejecuta primero  python ingest.py")
         return
 
-    matrix = np.load(os.path.join(STORE_DIR, "embeddings.npy"))
-    with open(os.path.join(STORE_DIR, "chunks.json"), encoding="utf-8") as f:
-        chunks = json.load(f)
+    matrix, chunks = load_store()
     client = Groq(api_key=groq_key)
 
     print("Pregúntale a la OGUC (escribe 'salir' para terminar)\n")
@@ -68,25 +92,8 @@ def main():
         question = input("Pregunta: ").strip()
         if not question or question.lower() in ("salir", "exit", "quit"):
             break
-
-        qvec = embed_query(question, gemini_key)
-        scores = matrix @ qvec
-        top = np.argsort(scores)[::-1][:TOP_K]
-        context = "\n\n---\n\n".join(chunks[i]["text"] for i in top)
-
-        resp = client.chat.completions.create(
-            model=LLM_MODEL,
-            temperature=0,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": f"Contexto:\n{context}\n\nPregunta: {question}",
-                },
-            ],
-        )
-        print(f"\n{resp.choices[0].message.content}\n")
-        pages = sorted({chunks[i]["page"] for i in top})
+        text, pages = answer(question, matrix, chunks, gemini_key, client)
+        print(f"\n{text}\n")
         print(f"(Fuentes: páginas {', '.join(map(str, pages))} del PDF)\n")
 
 
