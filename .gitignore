@@ -2,5 +2,6 @@ venv/
 .env
 keys/
 store/
+data/ddu/
 __pycache__/
 *.pyc

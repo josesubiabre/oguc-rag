@@ -10,7 +10,7 @@ load_dotenv()
 ROOT = Path(__file__).resolve().parent.parent
 
 # Rutas
-PDF_PATH = ROOT / "data" / "oguc.pdf"
+DATA_DIR = ROOT / "data"
 STORE_DIR = ROOT / "store"
 
 # Embeddings (Gemini)

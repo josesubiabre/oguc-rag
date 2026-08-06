@@ -28,7 +28,7 @@ def ask(q: Question):
     if not question or len(question) > 500:
         raise HTTPException(400, "La pregunta debe tener entre 1 y 500 caracteres")
     try:
-        text, pages = answer(question)
+        text, sources = answer(question)
     except Exception:
         raise HTTPException(503, "El servicio está saturado, intenta de nuevo en unos segundos")
-    return {"answer": text, "pages": pages}
+    return {"answer": text, "sources": sources}

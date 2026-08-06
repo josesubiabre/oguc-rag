@@ -14,10 +14,18 @@ def _store():
 
 
 def answer(question, k=TOP_K):
-    """Devuelve (texto de respuesta, páginas fuente ordenadas)."""
+    """Devuelve (texto, fuentes), con fuentes = [{"source", "pages"}, ...]."""
     qvec = embed_query(question)
     hits = _store().search(qvec, k)
-    context = "\n\n---\n\n".join(h["text"] for h in hits)
+    context = "\n\n---\n\n".join(
+        f"[{h.get('source', 'OGUC')}, página {h['page']}]\n{h['text']}" for h in hits
+    )
     text = generate_answer(question, context)
-    pages = sorted({h["page"] for h in hits})
-    return text, pages
+
+    by_source = {}
+    for h in hits:
+        by_source.setdefault(h.get("source", "OGUC"), set()).add(h["page"])
+    sources = [
+        {"source": s, "pages": sorted(p)} for s, p in sorted(by_source.items())
+    ]
+    return text, sources

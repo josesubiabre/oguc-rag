@@ -56,9 +56,14 @@ function useAutoResizeTextarea({
   return { textareaRef, adjustHeight };
 }
 
+interface Source {
+  source: string;
+  pages: number[];
+}
+
 interface Answer {
   answer: string;
-  pages: number[];
+  sources: Source[];
 }
 
 export function OgucChat() {
@@ -203,8 +208,10 @@ export function OgucChat() {
               <>
                 {result.answer}
                 <div className="text-xs text-zinc-400 mt-4">
-                  Fuentes: páginas {result.pages.join(", ")} de la OGUC (marzo
-                  2026)
+                  Fuentes:{" "}
+                  {result.sources
+                    .map((s) => `${s.source} (págs. ${s.pages.join(", ")})`)
+                    .join(" · ")}
                 </div>
               </>
             )}

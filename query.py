@@ -25,9 +25,12 @@ def main():
         question = input("Pregunta: ").strip()
         if not question or question.lower() in ("salir", "exit", "quit"):
             break
-        text, pages = answer(question)
+        text, sources = answer(question)
         print(f"\n{text}\n")
-        print(f"(Fuentes: páginas {', '.join(map(str, pages))} del PDF)\n")
+        cites = "; ".join(
+            f"{s['source']} págs. {', '.join(map(str, s['pages']))}" for s in sources
+        )
+        print(f"(Fuentes: {cites})\n")
 
 
 if __name__ == "__main__":

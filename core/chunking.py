@@ -1,16 +1,52 @@
 """Extracción del PDF y división en fragmentos por límites de 'Artículo N°'."""
 
 import re
+from pathlib import Path
 
 from pypdf import PdfReader
 
-from core.config import MAX_CHUNK_CHARS
+from core.config import DATA_DIR, MAX_CHUNK_CHARS
+
+# Nombres legibles para los documentos conocidos (por prefijo de archivo)
+_KNOWN_SOURCES = {
+    "oguc": "OGUC",
+    "lguc": "LGUC",
+    "ley-de-copropiedad": "Ley de Copropiedad (21.442)",
+    "normativa-de-accesibilidad": "DS 50 Accesibilidad Universal",
+}
+
+
+def source_name(path):
+    """Nombre legible del documento a partir de su archivo."""
+    path = Path(path)
+    m = re.search(r"DDU[-_ ]?(\d+)", path.name, re.IGNORECASE)
+    if m and path.parent.name == "ddu":
+        return f"Circular DDU {m.group(1)}"
+    stem_lower = path.stem.lower()
+    for prefix, name in _KNOWN_SOURCES.items():
+        if stem_lower.startswith(prefix):
+            return name
+    return path.stem
+
+
+def corpus_files(data_dir=DATA_DIR):
+    """Todos los PDF del corpus, ordenados de forma estable."""
+    return sorted(Path(data_dir).rglob("*.pdf"))
 
 
 def extract_pages(path):
     """Devuelve [(número de página, texto), ...]."""
     reader = PdfReader(path)
     return [(i + 1, page.extract_text() or "") for i, page in enumerate(reader.pages)]
+
+
+def split_document(path, max_chars=MAX_CHUNK_CHARS):
+    """Extrae y fragmenta un PDF, etiquetando cada fragmento con su fuente."""
+    source = source_name(path)
+    chunks = split_chunks(extract_pages(path), max_chars=max_chars)
+    for c in chunks:
+        c["source"] = source
+    return chunks
 
 
 def split_chunks(pages, max_chars=MAX_CHUNK_CHARS):

@@ -1,6 +1,6 @@
-"""Vectoriza la OGUC y guarda la base en store/.
+"""Vectoriza todos los PDF de data/ (incluida data/ddu/) y guarda la base en store/.
 
-Ejecutar una sola vez (o cada vez que cambie el PDF):
+Ejecutar cada vez que cambie el corpus:
     python ingest.py
 
 Si se interrumpe (p. ej. por cuota), guarda un checkpoint y al volver a
@@ -9,8 +9,8 @@ ejecutarse reanuda desde donde quedó.
 
 import json
 
-from core.chunking import extract_pages, split_chunks
-from core.config import GEMINI_API_KEY, PDF_PATH, STORE_DIR
+from core.chunking import corpus_files, split_document
+from core.config import GEMINI_API_KEY, STORE_DIR
 from core.embeddings import embed_documents
 from core.store import VectorStore
 
@@ -23,12 +23,14 @@ def main():
         print("Falta GEMINI_API_KEY en .env (aistudio.google.com)")
         return
 
-    print("Cargando PDF...")
-    pages = extract_pages(PDF_PATH)
-    print(f"  {len(pages)} páginas")
-
-    chunks = split_chunks(pages)
-    print(f"  {len(chunks)} fragmentos")
+    files = corpus_files()
+    print(f"Cargando {len(files)} documentos...")
+    chunks = []
+    for path in files:
+        doc_chunks = split_document(path)
+        chunks.extend(doc_chunks)
+        print(f"  {path.name}: {len(doc_chunks)} fragmentos")
+    print(f"  total: {len(chunks)} fragmentos")
 
     print("Generando embeddings vía API de Gemini...")
     STORE_DIR.mkdir(exist_ok=True)
