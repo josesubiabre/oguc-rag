@@ -44,6 +44,8 @@ def main():
             batch = [c["text"] for c in chunks[i : i + BATCH_SIZE]]
             vectors.extend(embed_documents(batch))
             print(f"  {min(i + BATCH_SIZE, len(chunks))}/{len(chunks)}")
+            if (i // BATCH_SIZE) % 20 == 0:  # checkpoint periódico
+                CHECKPOINT.write_text(json.dumps(vectors), encoding="utf-8")
     except Exception as e:
         CHECKPOINT.write_text(json.dumps(vectors), encoding="utf-8")
         print(f"\nError: {e}")

@@ -22,16 +22,25 @@ def _embed(text, task_type):
         "taskType": task_type,
         "outputDimensionality": EMBED_DIM,
     }
+    last_error = "sin detalle"
     for attempt in range(8):
-        r = requests.post(url, json=body, timeout=60)
+        try:
+            r = requests.post(url, json=body, timeout=60)
+        except requests.exceptions.RequestException as e:
+            last_error = str(e)
+            wait = min(5 * (attempt + 1), 30)
+            print(f"  error de conexión, reintentando en {wait}s...")
+            time.sleep(wait)
+            continue
         if r.status_code == 429:
+            last_error = r.text[:1500]
             wait = min(15 * (attempt + 1), 60)
             print(f"  límite de tasa, esperando {wait}s...")
             time.sleep(wait)
             continue
         r.raise_for_status()
         return r.json()["embedding"]["values"]
-    raise RuntimeError(f"Demasiados reintentos contra la API de Gemini: {r.text[:1500]}")
+    raise RuntimeError(f"Demasiados reintentos contra la API de Gemini: {last_error}")
 
 
 def embed_query(text):
@@ -58,9 +67,12 @@ def embed_documents(texts):
             for t in texts
         ]
     }
-    r = requests.post(url, json=body, timeout=120)
-    if r.status_code == 200:
-        return [e["values"] for e in r.json()["embeddings"]]
+    try:
+        r = requests.post(url, json=body, timeout=120)
+        if r.status_code == 200:
+            return [e["values"] for e in r.json()["embeddings"]]
+    except requests.exceptions.RequestException:
+        pass  # cae al modo de a uno, que tiene reintentos
 
     vectors = []
     for t in texts:
