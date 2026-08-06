@@ -1,7 +1,7 @@
 venv/
 .env
 keys/
-store/
+store/checkpoint.json
 data/ddu/
 __pycache__/
 *.pyc

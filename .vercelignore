@@ -1,0 +1,9 @@
+web
+data
+venv
+tests
+keys
+.env
+download_ddu.py
+ingest.py
+query.py
