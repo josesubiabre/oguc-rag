@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asistente OGUC — Pregúntale a la Ordenanza</title>
+<style>
+  :root {
+    --bg: #f7f6f3; --card: #ffffff; --text: #1f2937; --muted: #6b7280;
+    --accent: #b45309; --accent-soft: #fef3e2; --border: #e5e7eb;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 2rem 1rem;
+  }
+  main { width: 100%; max-width: 640px; }
+  h1 { font-size: 1.6rem; margin-bottom: .3rem; }
+  .subtitle { color: var(--muted); margin-bottom: 1.5rem; font-size: .95rem; }
+  form { display: flex; gap: .5rem; margin-bottom: 1rem; }
+  input {
+    flex: 1; padding: .8rem 1rem; font-size: 1rem;
+    border: 1px solid var(--border); border-radius: .6rem; background: var(--card);
+  }
+  input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+  button {
+    padding: .8rem 1.2rem; font-size: 1rem; border: none; border-radius: .6rem;
+    background: var(--accent); color: #fff; cursor: pointer;
+  }
+  button:disabled { opacity: .5; cursor: wait; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: .8rem;
+    padding: 1.2rem; margin-bottom: 1rem; white-space: pre-wrap; line-height: 1.55;
+  }
+  .pages { color: var(--muted); font-size: .85rem; margin-top: .8rem; }
+  .examples { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
+  .examples button {
+    background: var(--accent-soft); color: var(--accent); font-size: .85rem;
+    padding: .45rem .8rem;
+  }
+  .disclaimer { color: var(--muted); font-size: .78rem; margin-top: 2rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Asistente OGUC 🇨🇱</h1>
+  <p class="subtitle">Pregúntale en lenguaje simple a la Ordenanza General de Urbanismo y Construcciones</p>
+
+  <form id="form">
+    <input id="q" maxlength="500" placeholder="Ej: ¿Necesito permiso para ampliar mi casa?" autofocus>
+    <button id="send" type="submit">Preguntar</button>
+  </form>
+
+  <div class="examples" id="examples">
+    <button type="button">¿Qué es un permiso de obra menor?</button>
+    <button type="button">¿Altura mínima de una baranda?</button>
+    <button type="button">¿Qué distancia debo dejar con el vecino?</button>
+  </div>
+
+  <div id="result"></div>
+
+  <p class="disclaimer">Herramienta informativa no oficial. Verifica siempre con el texto vigente de la OGUC y un profesional competente.</p>
+</main>
+
+<script>
+const form = document.getElementById("form");
+const input = document.getElementById("q");
+const send = document.getElementById("send");
+const result = document.getElementById("result");
+
+document.getElementById("examples").addEventListener("click", (e) => {
+  if (e.target.tagName === "BUTTON") { input.value = e.target.textContent; form.requestSubmit(); }
+});
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const question = input.value.trim();
+  if (!question) return;
+  send.disabled = true;
+  result.innerHTML = '<div class="card">Buscando en la OGUC…</div>';
+  try {
+    const r = await fetch("/api/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || "Error");
+    const card = document.createElement("div");
+    card.className = "card";
+    card.textContent = data.answer;
+    const pages = document.createElement("div");
+    pages.className = "pages";
+    pages.textContent = "Fuentes: páginas " + data.pages.join(", ") + " de la OGUC (marzo 2026)";
+    card.appendChild(pages);
+    result.replaceChildren(card);
+  } catch (err) {
+    result.innerHTML = '<div class="card">⚠️ ' + err.message + '</div>';
+  } finally {
+    send.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

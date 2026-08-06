@@ -28,10 +28,20 @@ Luego:
 
 ```bash
 python ingest.py    # vectoriza la OGUC (una sola vez)
-python query.py     # pregunta en lenguaje natural
+python query.py     # pregunta en lenguaje natural (terminal)
 ```
+
+### Interfaz web
+
+```bash
+uvicorn app:app --reload
+```
+
+Abre http://localhost:8000
 
 ## Roadmap
 
-- [ ] Interfaz web pública
+- [x] RAG funcionando (ingesta + consultas con citas de artículos)
+- [x] Interfaz web local
+- [ ] Despliegue público (hosting gratuito)
 - [ ] Analítica de uso
