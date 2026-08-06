@@ -5,7 +5,10 @@ import { Menu } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { ChatComposer, ChatComposerHandle } from "@/components/chat-composer";
-import { LegalDisclaimerModal } from "@/components/legal-disclaimer";
+import {
+  LegalDisclaimerModal,
+  SHORT_DISCLAIMER,
+} from "@/components/legal-disclaimer";
 import { BouncingDots } from "@/components/ui/bouncing-dots";
 import {
   ChatMessage,
@@ -174,6 +177,9 @@ export function NormaObraApp() {
                             .join(" · ")}
                         </div>
                       )}
+                      <div className="mt-3 border-t border-line-subtle pt-3 text-[12px] leading-relaxed text-text-subtle">
+                        {SHORT_DISCLAIMER}
+                      </div>
                     </div>
                   )
                 )}
