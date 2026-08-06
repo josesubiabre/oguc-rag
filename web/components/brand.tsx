@@ -1,21 +1,48 @@
 import { cn } from "@/lib/utils";
 
-/** Isotipo geométrico de NormaObra: planos plegados, trazo lineal. */
+/** Isotipo de NormaObra: tres planos normativos superpuestos forman una N. */
 export function BrandMark({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 48 48"
+      viewBox="0 0 64 64"
       fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinejoin="round"
-      strokeLinecap="round"
       className={cn("text-text-primary", className)}
-      aria-hidden="true"
+      role="img"
+      aria-label="NormaObra"
     >
-      <path d="M8 13.5 19 8l10 5 11-5v26.5L29 40l-10-5-11 5Z" />
-      <path d="M19 8v27" />
-      <path d="M29 13v27" className="text-brand" stroke="currentColor" />
+      {/* Acento: plano central de la N */}
+      <path d="M19 38.5 31.5 55V42.5L19 24Z" fill="var(--brand)" />
+      {/* Plano posterior */}
+      <path
+        d="M8 18.5 28 8.5V43.5L8 53.5V18.5Z"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Plano central y diagonal que construye la N */}
+      <path
+        d="M19 23.5 39 13.5V48.5L19 58.5V23.5Z"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M19 23.5 31.5 42.5"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Plano frontal */}
+      <path
+        d="M31.5 27 54 15.75V50.75L31.5 62V27Z"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
