@@ -5,81 +5,149 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Asistente OGUC — Pregúntale a la Ordenanza</title>
 <style>
+  /* Paleta equivalente a Tailwind neutral/zinc del diseño v0 */
   :root {
-    --bg: #f7f6f3; --card: #ffffff; --text: #1f2937; --muted: #6b7280;
-    --accent: #b45309; --accent-soft: #fef3e2; --border: #e5e7eb;
+    --bg: #0a0a0a;            /* neutral-950 */
+    --card: #171717;          /* neutral-900 */
+    --card-hover: #262626;    /* neutral-800 */
+    --border: #262626;        /* neutral-800 */
+    --border-2: #3f3f46;      /* zinc-700 */
+    --text: #fafafa;
+    --muted: #a1a1aa;         /* zinc-400 */
+    --placeholder: #737373;   /* neutral-500 */
   }
   * { box-sizing: border-box; margin: 0; }
   body {
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
     background: var(--bg); color: var(--text);
     min-height: 100vh; display: flex; flex-direction: column; align-items: center;
-    padding: 2rem 1rem;
+    padding: 4rem 1rem 2rem;
   }
-  main { width: 100%; max-width: 640px; }
-  h1 { font-size: 1.6rem; margin-bottom: .3rem; }
-  .subtitle { color: var(--muted); margin-bottom: 1.5rem; font-size: .95rem; }
-  form { display: flex; gap: .5rem; margin-bottom: 1rem; }
-  input {
-    flex: 1; padding: .8rem 1rem; font-size: 1rem;
-    border: 1px solid var(--border); border-radius: .6rem; background: var(--card);
+  main { width: 100%; max-width: 56rem; display: flex; flex-direction: column; align-items: center; gap: 2rem; }
+  h1 { font-size: 2.25rem; font-weight: 700; text-align: center; letter-spacing: -0.02em; }
+
+  .composer { width: 100%; max-width: 42rem; }
+  .box {
+    position: relative; background: var(--card);
+    border: 1px solid var(--border); border-radius: 0.75rem;
   }
-  input:focus { outline: 2px solid var(--accent); border-color: transparent; }
-  button {
-    padding: .8rem 1.2rem; font-size: 1rem; border: none; border-radius: .6rem;
-    background: var(--accent); color: #fff; cursor: pointer;
+  textarea {
+    display: block; width: 100%; min-height: 60px; max-height: 200px;
+    padding: 0.75rem 1rem; resize: none; overflow: hidden;
+    background: transparent; border: none; outline: none;
+    color: var(--text); font: inherit; font-size: 0.875rem;
   }
-  button:disabled { opacity: .5; cursor: wait; }
-  .card {
-    background: var(--card); border: 1px solid var(--border); border-radius: .8rem;
-    padding: 1.2rem; margin-bottom: 1rem; white-space: pre-wrap; line-height: 1.55;
+  textarea::placeholder { color: var(--placeholder); font-size: 0.875rem; }
+  .box-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; }
+  .hint { font-size: 0.75rem; color: var(--placeholder); padding-left: 0.25rem; }
+  #send {
+    display: flex; align-items: center; gap: 0.25rem;
+    padding: 0.375rem; border-radius: 0.5rem; font-size: 0.875rem;
+    border: 1px solid var(--border-2); background: transparent;
+    color: var(--muted); cursor: pointer; transition: all .15s;
   }
-  .pages { color: var(--muted); font-size: .85rem; margin-top: .8rem; }
-  .examples { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
-  .examples button {
-    background: var(--accent-soft); color: var(--accent); font-size: .85rem;
-    padding: .45rem .8rem;
+  #send:hover { border-color: #52525b; background: #27272a; }
+  #send.ready { background: #fff; color: #000; border-color: #fff; }
+  #send svg { width: 1rem; height: 1rem; }
+  #send:disabled { opacity: .5; cursor: wait; }
+
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; margin-top: 1rem; }
+  .chips button {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 1rem; border-radius: 9999px;
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--muted); font-size: 0.75rem; cursor: pointer; transition: all .15s;
   }
-  .disclaimer { color: var(--muted); font-size: .78rem; margin-top: 2rem; text-align: center; }
+  .chips button:hover { background: var(--card-hover); color: var(--text); }
+  .chips svg { width: 1rem; height: 1rem; }
+
+  #result { width: 100%; max-width: 42rem; }
+  .answer {
+    background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem;
+    padding: 1.25rem; white-space: pre-wrap; line-height: 1.6; font-size: 0.9rem;
+  }
+  .answer .pages { color: var(--muted); font-size: 0.78rem; margin-top: 0.9rem; }
+  .pulse { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .45 } }
+
+  .disclaimer { color: var(--placeholder); font-size: 0.72rem; text-align: center; margin-top: auto; padding-top: 2.5rem; max-width: 34rem; }
 </style>
 </head>
 <body>
 <main>
-  <h1>Asistente OGUC 🇨🇱</h1>
-  <p class="subtitle">Pregúntale en lenguaje simple a la Ordenanza General de Urbanismo y Construcciones</p>
+  <h1>¿Qué quieres saber de la OGUC?</h1>
 
-  <form id="form">
-    <input id="q" maxlength="500" placeholder="Ej: ¿Necesito permiso para ampliar mi casa?" autofocus>
-    <button id="send" type="submit">Preguntar</button>
-  </form>
+  <div class="composer">
+    <div class="box">
+      <textarea id="q" maxlength="500" rows="1"
+        placeholder="Pregúntale a la Ordenanza General de Urbanismo y Construcciones..."
+        autofocus></textarea>
+      <div class="box-bar">
+        <span class="hint">Enter para enviar · Shift+Enter para salto de línea</span>
+        <button id="send" type="button" aria-label="Enviar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+        </button>
+      </div>
+    </div>
 
-  <div class="examples" id="examples">
-    <button type="button">¿Qué es un permiso de obra menor?</button>
-    <button type="button">¿Altura mínima de una baranda?</button>
-    <button type="button">¿Qué distancia debo dejar con el vecino?</button>
+    <div class="chips" id="chips">
+      <button type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 22H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2Z"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></svg>
+        ¿Qué es un permiso de obra menor?
+      </button>
+      <button type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2M11.5 9.5l2-2M8.5 6.5l2-2M17.5 15.5l2-2"/></svg>
+        ¿Altura mínima de una baranda?
+      </button>
+      <button type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+        ¿Distancia mínima con el vecino?
+      </button>
+      <button type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8M16 17H8M10 9H8"/></svg>
+        ¿Necesito permiso para ampliar mi casa?
+      </button>
+    </div>
   </div>
 
   <div id="result"></div>
 
-  <p class="disclaimer">Herramienta informativa no oficial. Verifica siempre con el texto vigente de la OGUC y un profesional competente.</p>
+  <p class="disclaimer">Herramienta informativa no oficial basada en la OGUC (marzo 2026). Verifica siempre con el texto vigente y un profesional competente.</p>
 </main>
 
 <script>
-const form = document.getElementById("form");
-const input = document.getElementById("q");
+const ta = document.getElementById("q");
 const send = document.getElementById("send");
 const result = document.getElementById("result");
 
-document.getElementById("examples").addEventListener("click", (e) => {
-  if (e.target.tagName === "BUTTON") { input.value = e.target.textContent; form.requestSubmit(); }
+const MIN_H = 60, MAX_H = 200;
+function adjustHeight(reset) {
+  ta.style.height = MIN_H + "px";
+  if (!reset) ta.style.height = Math.max(MIN_H, Math.min(ta.scrollHeight, MAX_H)) + "px";
+  ta.style.overflowY = ta.scrollHeight > MAX_H ? "auto" : "hidden";
+}
+ta.addEventListener("input", () => {
+  adjustHeight();
+  send.classList.toggle("ready", ta.value.trim().length > 0);
+});
+window.addEventListener("resize", () => adjustHeight());
+adjustHeight(true);
+
+ta.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask(); }
+});
+send.addEventListener("click", ask);
+
+document.getElementById("chips").addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (btn) { ta.value = btn.textContent.trim(); ta.dispatchEvent(new Event("input")); ask(); }
 });
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const question = input.value.trim();
-  if (!question) return;
+async function ask() {
+  const question = ta.value.trim();
+  if (!question || send.disabled) return;
   send.disabled = true;
-  result.innerHTML = '<div class="card">Buscando en la OGUC…</div>';
+  result.innerHTML = '<div class="answer pulse">Buscando en la OGUC…</div>';
   try {
     const r = await fetch("/api/ask", {
       method: "POST",
@@ -87,21 +155,25 @@ form.addEventListener("submit", async (e) => {
       body: JSON.stringify({ question }),
     });
     const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || "Error");
+    if (!r.ok) throw new Error(data.detail || "Error inesperado");
     const card = document.createElement("div");
-    card.className = "card";
+    card.className = "answer";
     card.textContent = data.answer;
     const pages = document.createElement("div");
     pages.className = "pages";
     pages.textContent = "Fuentes: páginas " + data.pages.join(", ") + " de la OGUC (marzo 2026)";
     card.appendChild(pages);
     result.replaceChildren(card);
+    ta.value = "";
+    ta.dispatchEvent(new Event("input"));
+    adjustHeight(true);
   } catch (err) {
-    result.innerHTML = '<div class="card">⚠️ ' + err.message + '</div>';
+    result.innerHTML = '<div class="answer">⚠️ ' + err.message + "</div>";
   } finally {
     send.disabled = false;
+    ta.focus();
   }
-});
+}
 </script>
 </body>
 </html>
