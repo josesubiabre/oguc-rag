@@ -19,7 +19,7 @@ EMBED_DIM = 768
 
 # LLM: Groq como primera opción, Gemini como respaldo ante saturación
 LLM_MODEL = "llama-3.3-70b-versatile"
-FALLBACK_MODEL = "gemini-3.5-flash"
+FALLBACK_MODEL = "gemini-3.5-flash-lite"
 
 # Recuperación y chunking
 TOP_K = 5

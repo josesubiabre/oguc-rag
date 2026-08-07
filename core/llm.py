@@ -58,9 +58,11 @@ def _ask_gemini(user_content):
             "contents": [{"role": "user", "parts": [{"text": user_content}]}],
             "generationConfig": {
                 "temperature": 0,
-                # Sin razonamiento extendido: con él la respuesta tarda ~30s;
-                # sin él, ~1,5s con la misma calidad para este caso de uso.
-                "thinkingConfig": {"thinkingBudget": 0},
+                # Sin razonamiento extendido: es un respaldo que actúa bajo
+                # carga, donde la latencia importa más que la deliberación.
+                # thinkingLevel es el parámetro vigente para modelos Gemini 3;
+                # el heredado thinkingBudget no es válido en las variantes Lite.
+                "thinkingConfig": {"thinkingLevel": "minimal"},
             },
         },
         timeout=60,
