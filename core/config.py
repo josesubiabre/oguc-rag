@@ -17,8 +17,9 @@ STORE_DIR = ROOT / "store"
 EMBED_MODEL = "gemini-embedding-001"
 EMBED_DIM = 768
 
-# LLM (Groq)
+# LLM: Groq como primera opción, Gemini como respaldo ante saturación
 LLM_MODEL = "llama-3.3-70b-versatile"
+FALLBACK_MODEL = "gemini-3.5-flash"
 
 # Recuperación y chunking
 TOP_K = 5

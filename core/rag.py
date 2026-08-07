@@ -14,13 +14,13 @@ def _store():
 
 
 def answer(question, k=TOP_K):
-    """Devuelve (texto, fuentes), con fuentes = [{"source", "pages"}, ...]."""
+    """Devuelve (texto, fuentes, proveedor), fuentes = [{"source", "pages"}, ...]."""
     qvec = embed_query(question)
     hits = _store().search(qvec, k)
     context = "\n\n---\n\n".join(
         f"[{h.get('source', 'OGUC')}, página {h['page']}]\n{h['text']}" for h in hits
     )
-    text = generate_answer(question, context)
+    text, provider = generate_answer(question, context)
 
     by_source = {}
     for h in hits:
@@ -28,4 +28,4 @@ def answer(question, k=TOP_K):
     sources = [
         {"source": s, "pages": sorted(p)} for s, p in sorted(by_source.items())
     ]
-    return text, sources
+    return text, sources, provider

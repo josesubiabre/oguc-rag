@@ -34,7 +34,7 @@ Decisiones de diseño orientadas a costo y simplicidad:
 
 - **Base vectorial en numpy puro** — para un corpus de este tamaño, la similitud coseno sobre una matriz en memoria responde en milisegundos, sin servicios externos ni dependencias nativas (funciona hasta en Windows ARM64).
 - **Embeddings por API** (Gemini) — el servidor no carga modelos; puede desplegarse en hosting mínimo.
-- **LLM vía Groq** — inferencia rápida de Llama 3.3 70B con tier gratuito.
+- **LLM vía Groq con respaldo en Gemini** — Llama 3.3 70B responde rápido y gratis, pero su tier libre tope en 12.000 tokens/minuto; al saturarse, Gemini Flash toma el relevo automáticamente para que nadie vea un error por demanda.
 - **Prompt anti-alucinación** — el modelo responde solo desde el contexto recuperado y declara cuando la normativa no cubre la pregunta.
 
 ## Estructura
@@ -45,11 +45,13 @@ core/               # lógica del RAG, un módulo por responsabilidad
 ├── chunking.py     #   PDF → fragmentos con fuente y página
 ├── embeddings.py   #   cliente Gemini (único módulo que conoce el proveedor)
 ├── store.py        #   base vectorial (guardar / cargar / buscar)
-├── llm.py          #   prompt + Groq
+├── llm.py          #   prompt + Groq con respaldo en Gemini
+├── analytics.py    #   registro de uso (stdout + Upstash opcional)
 └── rag.py          #   orquestación pregunta → respuesta
 ingest.py           # ingesta del corpus (reanudable con checkpoints)
 download_ddu.py     # descarga las circulares DDU vigentes desde el MINVU
 query.py            # CLI de consultas
+stats.py            # reporte de uso (requiere Upstash)
 app.py              # API (FastAPI)
 tests/              # pytest, sin consumo de APIs
 web/                # frontend (Next.js 16 + Tailwind 4 + shadcn)
