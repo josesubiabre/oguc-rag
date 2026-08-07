@@ -20,7 +20,7 @@ def _headers():
     return {"x-goog-api-key": GEMINI_API_KEY}
 
 
-def _embed(text, task_type):
+def _embed(text, task_type, attempts=8, patient=True):
     url = f"{_BASE}/{EMBED_MODEL}:embedContent"
     body = {
         "model": f"models/{EMBED_MODEL}",
@@ -29,19 +29,26 @@ def _embed(text, task_type):
         "outputDimensionality": EMBED_DIM,
     }
     last_error = "sin detalle"
-    for attempt in range(8):
+    for attempt in range(attempts):
         try:
             r = requests.post(url, json=body, headers=_headers(), timeout=60)
         except requests.exceptions.RequestException as e:
             last_error = str(e)
-            wait = min(5 * (attempt + 1), 30)
-            print(f"  error de conexión, reintentando en {wait}s...")
-            time.sleep(wait)
+            if attempt == attempts - 1:
+                break
+            time.sleep(min(5 * (attempt + 1), 30) if patient else 1)
             continue
         if r.status_code == 429:
             last_error = r.text[:1500]
-            wait = min(15 * (attempt + 1), 60)
-            print(f"  límite de tasa, esperando {wait}s...")
+            # Créditos agotados no se resuelve esperando: cortar de inmediato
+            # en vez de dejar la petición colgada durante minutos.
+            if "credits are depleted" in last_error or "billing" in last_error:
+                raise RuntimeError(f"Créditos de Gemini agotados: {last_error[:300]}")
+            if attempt == attempts - 1:
+                break
+            wait = min(15 * (attempt + 1), 60) if patient else 2
+            if patient:
+                print(f"  límite de tasa, esperando {wait}s...")
             time.sleep(wait)
             continue
         r.raise_for_status()
@@ -50,8 +57,12 @@ def _embed(text, task_type):
 
 
 def embed_query(text):
-    """Vector normalizado para una pregunta de usuario."""
-    v = np.array(_embed(text, "RETRIEVAL_QUERY"), dtype=np.float32)
+    """Vector normalizado para una pregunta de usuario.
+
+    Pocos reintentos y esperas cortas: en una petición web es preferible
+    fallar en segundos que dejar al usuario esperando minutos.
+    """
+    v = np.array(_embed(text, "RETRIEVAL_QUERY", attempts=2, patient=False), dtype=np.float32)
     return v / np.linalg.norm(v)
 
 

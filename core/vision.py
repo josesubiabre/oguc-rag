@@ -11,7 +11,9 @@ proceso es reanudable y la ingesta normal lo reutiliza sin volver a pagar.
 
 import base64
 import json
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pymupdf
@@ -21,6 +23,7 @@ from core.config import FALLBACK_MODEL, GEMINI_API_KEY
 
 DPI = 150
 MAX_OUTPUT_TOKENS = 4000
+WORKERS = 6  # páginas simultáneas; el tier pagado de Gemini lo tolera holgado
 
 # Pedir transcripción literal hace que Gemini bloquee la respuesta por
 # recitación de material con copyright. Parafrasear evita el bloqueo y,
@@ -75,33 +78,58 @@ def extracted_path(pdf_path):
 
 
 def extract_document(pdf_path, on_progress=None):
-    """Describe cada página del PDF. Reanudable: reutiliza lo ya extraído."""
+    """Describe cada página del PDF. Reanudable: reutiliza lo ya extraído.
+
+    Las páginas se procesan en paralelo porque cada una es independiente y
+    la latencia es de red, no de CPU.
+    """
     pdf_path = Path(pdf_path)
     destino = extracted_path(pdf_path)
     paginas = json.loads(destino.read_text(encoding="utf-8")) if destino.exists() else {}
 
     doc = pymupdf.open(pdf_path)
-    try:
-        for i in range(doc.page_count):
-            clave = str(i + 1)
-            if clave in paginas:
-                continue
-            pix = doc[i].get_pixmap(dpi=DPI)
+    total = doc.page_count
+    # Una página guardada como cadena vacía falló: se reintenta en la
+    # siguiente pasada. SIN_CONTENIDO sí es un resultado válido y definitivo.
+    pendientes = [i for i in range(total) if not paginas.get(str(i + 1))]
+
+    # PyMuPDF no garantiza acceso concurrente al documento: el renderizado
+    # se serializa y solo la llamada de red va en paralelo.
+    doc_lock = threading.Lock()
+    state_lock = threading.Lock()
+    hechas = [0]
+
+    def procesar(i):
+        with doc_lock:
+            img = doc[i].get_pixmap(dpi=DPI).tobytes("png")
+        texto, detalle = "", ""
+        for intento in range(3):
             try:
-                texto = _describe_page(pix.tobytes("png"))
+                texto = _describe_page(img)
+                detalle = f"{len(texto)} chars"
+                break
             except Exception as e:
-                # Una página problemática no debe abortar el documento
-                texto = ""
-                if on_progress:
-                    on_progress(i + 1, doc.page_count, f"error: {str(e)[:80]}")
-            paginas[clave] = texto
+                detalle = f"error: {str(e)[:60]}"
+                if intento < 2:
+                    time.sleep(5 * (intento + 1))
+        with state_lock:
+            paginas[str(i + 1)] = texto
+            hechas[0] += 1
+            if hechas[0] % 10 == 0 or hechas[0] == len(pendientes):
+                destino.write_text(
+                    json.dumps(paginas, ensure_ascii=False), encoding="utf-8"
+                )
             if on_progress:
-                on_progress(i + 1, doc.page_count, f"{len(texto)} chars")
+                on_progress(hechas[0], len(pendientes), detalle)
+
+    try:
+        with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+            list(pool.map(procesar, pendientes))
+    finally:
+        with state_lock:
             destino.write_text(
                 json.dumps(paginas, ensure_ascii=False), encoding="utf-8"
             )
-            time.sleep(0.2)
-    finally:
         doc.close()
     return paginas
 

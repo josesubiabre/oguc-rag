@@ -3,5 +3,6 @@ venv/
 keys/
 store/checkpoint.json
 data/ddu/
+data/ilustrada/*.pdf
 __pycache__/
 *.pyc
