@@ -13,6 +13,7 @@ _KNOWN_SOURCES = {
     "lguc": "LGUC",
     "ley-de-copropiedad": "Ley de Copropiedad (21.442)",
     "normativa-de-accesibilidad": "DS 50 Accesibilidad Universal",
+    "oguc-ilustrada": "OGUC Ilustrada",
 }
 
 
@@ -41,8 +42,25 @@ def extract_pages(path):
 
 
 def split_document(path, max_chars=MAX_CHUNK_CHARS):
-    """Extrae y fragmenta un PDF, etiquetando cada fragmento con su fuente."""
+    """Extrae y fragmenta un PDF, etiquetando cada fragmento con su fuente.
+
+    Si el documento fue procesado con lectura visual (escaneos), usa esa
+    extracción en lugar de la capa de texto, que en esos PDF está vacía.
+    """
+    from core.vision import load_extracted
+
     source = source_name(path)
+    visual = load_extracted(path)
+    if visual is not None:
+        # Una página descrita = un fragmento: la descripción ya es una
+        # unidad temática coherente y cabe holgadamente en el límite.
+        chunks = [
+            {"text": texto[:max_chars], "page": num, "source": source}
+            for num, texto in visual
+            if len(texto) >= 50
+        ]
+        return chunks
+
     chunks = split_chunks(extract_pages(path), max_chars=max_chars)
     for c in chunks:
         c["source"] = source
