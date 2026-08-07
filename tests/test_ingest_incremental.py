@@ -4,9 +4,23 @@ No llaman a la API: los embeddings van mockeados.
 """
 
 import numpy as np
+import pytest
 
 import ingest_incremental as inc
+from core import bm25 as bm25_mod
 from core.store import VectorStore
+
+
+@pytest.fixture(autouse=True)
+def aislar_indice_bm25(tmp_path, monkeypatch):
+    """Ningún test debe escribir sobre los artefactos reales de store/."""
+    monkeypatch.setattr(bm25_mod, "INDEX_PATH", tmp_path / "bm25.pkl")
+    original = bm25_mod.Bm25Index.save
+
+    def save_aislado(self, path=None):
+        return original(self, path or tmp_path / "bm25.pkl")
+
+    monkeypatch.setattr(bm25_mod.Bm25Index, "save", save_aislado)
 
 CHUNKS = [
     {"text": "fragmento uno", "page": 1, "source": "OGUC"},
@@ -73,8 +87,6 @@ def test_ingesta_dos_veces_no_duplica_ni_rellama(tmp_path, monkeypatch):
 
 
 def test_save_rechaza_desalineacion(tmp_path):
-    import pytest
-
     with pytest.raises(ValueError, match="desalineación"):
         VectorStore.save([[1.0, 0.0]], CHUNKS, store_dir=tmp_path)
 

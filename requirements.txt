@@ -2,6 +2,9 @@ fastapi==0.141.1
 uvicorn==0.52.1
 groq==1.6.0
 numpy==2.5.1
+# Recuperador léxico BM25: Python puro, sin extensiones nativas, para que la
+# búsqueda siga funcionando cuando la API de embeddings no está disponible.
+rank-bm25==0.2.2
 pypdf==6.15.0
 pymupdf==1.28.2
 python-dotenv==1.2.2
