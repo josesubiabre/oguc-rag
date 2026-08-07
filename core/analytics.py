@@ -50,7 +50,13 @@ def _persist(event):
 
 
 def log_query(
-    question, latency_ms, sources=None, answer_text=None, error=None, provider=None
+    question,
+    latency_ms,
+    sources=None,
+    answer_text=None,
+    error=None,
+    provider=None,
+    mode=None,
 ):
     """Registra una consulta. Nunca lanza: la analítica no puede romper la app."""
     try:
@@ -62,6 +68,8 @@ def log_query(
         }
         if provider:
             event["provider"] = provider
+        if mode:
+            event["mode"] = mode  # hybrid | semantic | bm25_fallback
         if error:
             event["error"] = str(error)[:200]
         if sources:

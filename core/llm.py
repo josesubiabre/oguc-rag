@@ -78,3 +78,22 @@ def generate_answer(question, context):
     except Exception:
         # Saturación o caída de Groq: seguimos con Gemini en vez de fallar
         return _ask_gemini(user_content), "gemini"
+
+
+def extractive_answer(hits):
+    """Respuesta sin modelo: los fragmentos recuperados, con su origen.
+
+    Se usa cuando ningún proveedor de generación responde. La búsqueda ya
+    encontró material relevante, así que entregarlo es más útil que un error.
+    """
+    partes = [
+        "⚠️ La redacción automática de respuestas está temporalmente no "
+        "disponible. Estos son los fragmentos de la normativa que mejor "
+        "coinciden con tu consulta, para que los revises directamente:\n"
+    ]
+    for h in hits:
+        texto = h["text"].strip()
+        if len(texto) > 900:
+            texto = texto[:900].rsplit(" ", 1)[0] + "…"
+        partes.append(f"— {h.get('source', 'OGUC')}, página {h['page']}:\n{texto}")
+    return "\n\n".join(partes)

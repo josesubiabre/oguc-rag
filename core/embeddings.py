@@ -88,11 +88,17 @@ def embed_documents(texts):
         r = requests.post(url, json=body, headers=_headers(), timeout=120)
         if r.status_code == 200:
             return [e["values"] for e in r.json()["embeddings"]]
+        # Créditos agotados: cortar de inmediato, no degradar a modo de a uno
+        if r.status_code == 429 and (
+            "credits are depleted" in r.text or "billing" in r.text
+        ):
+            raise RuntimeError(f"Créditos de Gemini agotados: {r.text[:300]}")
     except requests.exceptions.RequestException:
-        pass  # cae al modo de a uno, que tiene reintentos
+        pass  # cae al modo de a uno
 
+    # Máximo un reintento por texto: operaciones pagadas no reintentan en bucle
     vectors = []
     for t in texts:
-        vectors.append(_embed(t, "RETRIEVAL_DOCUMENT"))
+        vectors.append(_embed(t, "RETRIEVAL_DOCUMENT", attempts=2, patient=True))
         time.sleep(0.5)
     return vectors

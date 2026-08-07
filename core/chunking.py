@@ -23,10 +23,19 @@ def source_name(path):
     m = re.search(r"DDU[-_ ]?(\d+)", path.name, re.IGNORECASE)
     if m and path.parent.name == "ddu":
         return f"Circular DDU {m.group(1)}"
+
     stem_lower = path.stem.lower()
-    for prefix, name in _KNOWN_SOURCES.items():
+
+    # Los tomos de la OGUC Ilustrada se distinguen entre sí para poder
+    # rastrear cada cita hasta su tomo y página.
+    if stem_lower.startswith("oguc-ilustrada"):
+        tomo = re.match(r"oguc-ilustrada-(i+)\b", stem_lower)
+        return f"OGUC Ilustrada {tomo.group(1).upper()}" if tomo else "OGUC Ilustrada"
+
+    # Prefijo más largo primero: "oguc-ilustrada" debe ganarle a "oguc".
+    for prefix in sorted(_KNOWN_SOURCES, key=len, reverse=True):
         if stem_lower.startswith(prefix):
-            return name
+            return _KNOWN_SOURCES[prefix]
     return path.stem
 
 

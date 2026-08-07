@@ -31,14 +31,32 @@ class VectorStore:
 
     @staticmethod
     def save(vectors, chunks, store_dir=STORE_DIR):
-        """Normaliza y persiste. `vectors` es una lista de listas de floats."""
+        """Normaliza y persiste de forma atómica.
+
+        Escribe primero a archivos temporales y recién al final los mueve
+        sobre los definitivos: un fallo a mitad de camino deja el índice
+        anterior intacto en vez de corromperlo.
+        """
         store_dir = Path(store_dir)
         store_dir.mkdir(exist_ok=True)
+
         matrix = np.array(vectors, dtype=np.float32)
+        if matrix.shape[0] != len(chunks):
+            raise ValueError(
+                f"desalineación: {matrix.shape[0]} vectores vs {len(chunks)} fragmentos"
+            )
         matrix /= np.linalg.norm(matrix, axis=1, keepdims=True)
-        np.save(store_dir / "embeddings.npy", matrix)
-        with open(store_dir / "chunks.json", "w", encoding="utf-8") as f:
+
+        tmp_emb = store_dir / "embeddings.npy.tmp"
+        tmp_chunks = store_dir / "chunks.json.tmp"
+        np.save(tmp_emb, matrix)
+        # np.save agrega .npy si el nombre no termina en .npy
+        tmp_emb_real = tmp_emb.with_suffix(".tmp.npy")
+        with open(tmp_chunks, "w", encoding="utf-8") as f:
             json.dump(chunks, f, ensure_ascii=False)
+
+        tmp_emb_real.replace(store_dir / "embeddings.npy")
+        tmp_chunks.replace(store_dir / "chunks.json")
 
     def search(self, query_vector, k):
         """Devuelve los k fragmentos más similares: [{"text", "page"}, ...]."""

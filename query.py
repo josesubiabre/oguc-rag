@@ -25,7 +25,7 @@ def main():
         question = input("Pregunta: ").strip()
         if not question or question.lower() in ("salir", "exit", "quit"):
             break
-        text, sources, _ = answer(question)
+        text, sources, _, _ = answer(question)
         print(f"\n{text}\n")
         cites = "; ".join(
             f"{s['source']} págs. {', '.join(map(str, s['pages']))}" for s in sources
