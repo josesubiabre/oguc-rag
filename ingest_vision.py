@@ -5,7 +5,7 @@ script describe cada página con un modelo de visión, incluyendo lo que
 muestran los diagramas, y deja el resultado listo para `python ingest.py`.
 
 Uso:
-    python ingest_vision.py                 # procesa data/ilustrada/*.pdf
+    python ingest_vision.py                 # procesa los escaneos de 01_sources
     python ingest_vision.py ruta/al.pdf     # procesa un archivo puntual
 
 Es reanudable: si se interrumpe, al repetir continúa donde quedó.
@@ -14,10 +14,10 @@ Es reanudable: si se interrumpe, al repetir continúa donde quedó.
 import sys
 from pathlib import Path
 
-from core.config import DATA_DIR, GEMINI_API_KEY
+from core.config import GEMINI_API_KEY, ILUSTRADA_DIR
 from core.vision import extract_document, extracted_path
 
-DEFAULT_DIR = DATA_DIR / "ilustrada"
+DEFAULT_DIR = ILUSTRADA_DIR
 
 
 def main():

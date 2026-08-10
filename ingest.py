@@ -1,4 +1,4 @@
-"""Vectoriza todos los PDF de data/ (incluida data/ddu/) y guarda la base en store/.
+"""Vectoriza todos los PDF de data/01_sources/ y guarda la base en store/.
 
 Ejecutar cada vez que cambie el corpus:
     python ingest.py

@@ -2,8 +2,18 @@ venv/
 .env
 keys/
 store/checkpoint.json
-data/ddu/
-data/formularios/
-data/ilustrada/*.pdf
 __pycache__/
 *.pyc
+
+# Corpus pesado: se reconstruye con los descargadores, no se versiona.
+data/01_sources/interpretacion_oficial/ddu_generales/
+data/01_sources/tramites/formularios_minvu/
+data/01_sources/material_explicativo/oguc_ilustrada/*.pdf
+
+# Bandeja de entrada y archivo: no son corpus. Se conserva la carpeta para
+# que la estructura sobreviva a un clon, pero no su contenido — las versiones
+# superadas ya quedan en el historial de git.
+data/00_inbox/*
+!data/00_inbox/.gitkeep
+data/90_archive/*
+!data/90_archive/.gitkeep

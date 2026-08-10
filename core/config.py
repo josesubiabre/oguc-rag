@@ -13,6 +13,15 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
 STORE_DIR = ROOT / "store"
 
+# El corpus se ordena por tipo jurídico bajo 01_sources/, separado de lo que
+# se genera a partir de él. Un documento nuevo sin validar va a 00_inbox/ y
+# una versión superada a 90_archive/: ninguna de las dos se indexa.
+SOURCES_DIR = DATA_DIR / "01_sources"
+DDU_DIR = SOURCES_DIR / "interpretacion_oficial" / "ddu_generales"
+FORMULARIOS_DIR = SOURCES_DIR / "tramites" / "formularios_minvu"
+ILUSTRADA_DIR = SOURCES_DIR / "material_explicativo" / "oguc_ilustrada"
+VISION_DIR = DATA_DIR / "02_processed" / "vision"
+
 # Embeddings (Gemini)
 EMBED_MODEL = "gemini-embedding-001"
 EMBED_DIM = 768

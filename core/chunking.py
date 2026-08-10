@@ -9,20 +9,24 @@ from core.config import DATA_DIR, MAX_CHUNK_CHARS
 
 # Nombres legibles para los documentos conocidos (por prefijo de archivo)
 _KNOWN_SOURCES = {
-    "oguc": "OGUC",
-    "lguc": "LGUC",
-    # Texto consolidado vigente de la LGUC descargado de Ley Chile. Sustituye
-    # a la recopilación del MINVU, que va con casi un año de atraso. El corpus
-    # nunca debe contener las dos: citarían artículos contradictorios.
-    "dto-458": "LGUC",
-    "ley-de-copropiedad": "Ley de Copropiedad (21.442)",
-    "reglamento-de-la-ley-21442": "Reglamento de la Ley de Copropiedad",
-    # Modifica la LGUC después de la recopilación de septiembre 2025, que aún
-    # no la incorpora: se indexa aparte para no dejar el vacío sin cubrir.
+    "ds-47-oguc": "OGUC",
+    # Texto consolidado vigente de la LGUC descargado de Ley Chile. El corpus
+    # nunca debe contener dos versiones del mismo cuerpo legal: citarían
+    # artículos contradictorios sin forma de distinguir cuál rige.
+    "dfl-458-lguc": "LGUC",
+    "ley-21442": "Ley de Copropiedad (21.442)",
     "ley-21807": "Ley 21.807 (Planificación Territorial)",
-    "normativa-de-accesibilidad": "DS 50 Accesibilidad Universal",
+    # Prefijo más largo que "ley-21442": el reglamento no es la ley.
+    "reglamento-ley-21442": "Reglamento de la Ley de Copropiedad",
+    "ds-50": "DS 50 Accesibilidad Universal",
     "oguc-ilustrada": "OGUC Ilustrada",
 }
+
+# Carpetas de data/ que no son fuente y no deben entrar al corpus: la bandeja
+# de entrada sin validar, el archivo de versiones superadas y los artefactos
+# derivados. corpus_files() recorre data/ entero, así que sin esta lista una
+# versión archivada volvería al índice y produciría reglas contradictorias.
+_FUERA_DEL_CORPUS = {"00_inbox", "90_archive", "02_processed", "03_indexes"}
 
 # Formulario Único Nacional del MINVU: el prefijo del código identifica la
 # actuación ante la DOM y el último dígito el tipo de obra. Se citan con su
@@ -85,10 +89,10 @@ def source_name(path):
     """Nombre legible del documento a partir de su archivo."""
     path = Path(path)
     m = re.search(r"DDU[-_ ]?(\d+)", path.name, re.IGNORECASE)
-    if m and path.parent.name == "ddu":
+    if m and path.parent.name == "ddu_generales":
         return f"Circular DDU {m.group(1)}"
 
-    if path.parent.name == "formularios":
+    if path.parent.name == "formularios_minvu":
         return _formulario_name(path.stem)
 
     stem_lower = path.stem.lower()
@@ -118,8 +122,17 @@ def es_procedimiento(chunk):
 
 
 def corpus_files(data_dir=DATA_DIR):
-    """Todos los PDF del corpus, ordenados de forma estable."""
-    return sorted(Path(data_dir).rglob("*.pdf"))
+    """Todos los PDF del corpus, ordenados de forma estable.
+
+    Recorre data/ completo, así que las carpetas que no son fuente deben
+    excluirse aquí: separarlas en el disco no basta para dejarlas fuera.
+    """
+    data_dir = Path(data_dir)
+    return sorted(
+        p
+        for p in data_dir.rglob("*.pdf")
+        if not _FUERA_DEL_CORPUS & set(p.relative_to(data_dir).parts)
+    )
 
 
 def extract_pages(path):

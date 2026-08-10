@@ -5,8 +5,9 @@ Aquí cada página se renderiza como imagen y un modelo con visión describe su
 contenido, incluyendo lo que muestran los diagramas y esquemas — que es
 justamente el valor de un manual ilustrado.
 
-El resultado se guarda junto al PDF como `<nombre>.extracted.json`, así el
-proceso es reanudable y la ingesta normal lo reutiliza sin volver a pagar.
+El resultado se guarda en `data/02_processed/vision/<nombre>.extracted.json`,
+separado de los PDF originales, así el proceso es reanudable y la ingesta
+normal lo reutiliza sin volver a pagar.
 """
 
 import base64
@@ -19,7 +20,9 @@ from pathlib import Path
 import pymupdf
 import requests
 
-from core.config import FALLBACK_MODEL, GEMINI_API_KEY
+# Las extracciones no son fuente oficial: viven separadas de los PDF para que
+# nadie las confunda con un documento descargado del MINVU o de Ley Chile.
+from core.config import FALLBACK_MODEL, GEMINI_API_KEY, VISION_DIR
 
 DPI = 150
 MAX_OUTPUT_TOKENS = 4000
@@ -74,7 +77,7 @@ def _describe_page(image_bytes):
 
 
 def extracted_path(pdf_path):
-    return Path(pdf_path).with_suffix(".extracted.json")
+    return VISION_DIR / f"{Path(pdf_path).stem}.extracted.json"
 
 
 def extract_document(pdf_path, on_progress=None):
@@ -85,6 +88,7 @@ def extract_document(pdf_path, on_progress=None):
     """
     pdf_path = Path(pdf_path)
     destino = extracted_path(pdf_path)
+    destino.parent.mkdir(parents=True, exist_ok=True)
     paginas = json.loads(destino.read_text(encoding="utf-8")) if destino.exists() else {}
 
     doc = pymupdf.open(pdf_path)

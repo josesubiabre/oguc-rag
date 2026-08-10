@@ -1,4 +1,8 @@
-"""Descarga los Formularios Únicos Nacionales del MINVU a data/formularios/.
+"""Descarga los Formularios Únicos Nacionales del MINVU.
+
+Destino: data/01_sources/tramites/formularios_minvu/. Igual que con las
+circulares, los nombres de archivo del MINVU se conservan tal cual porque son
+la clave de idempotencia de este script.
 
 Fuente: página oficial de formularios de permisos de edificación. Son los
 formularios que las Direcciones de Obras Municipales exigen para cada
@@ -19,9 +23,7 @@ import time
 
 import requests
 
-from core.config import ROOT
-
-FORM_DIR = ROOT / "data" / "formularios"
+from core.config import FORMULARIOS_DIR as FORM_DIR
 INDICE_URL = (
     "https://www.minvu.gob.cl/elementos-tecnicos/formularios/"
     "formularios-de-permisos-de-edificacion/"

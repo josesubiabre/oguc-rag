@@ -1,4 +1,8 @@
-"""Descarga las circulares DDU generales vigentes del MINVU a data/ddu/.
+"""Descarga las circulares DDU generales vigentes del MINVU.
+
+Destino: data/01_sources/interpretacion_oficial/ddu_generales/. Se conservan
+los nombres de archivo del MINVU: son la clave con que este script decide qué
+ya está descargado, así que renombrarlos obligaría a bajar las 250 de nuevo.
 
 Fuente: página oficial "circulares generales por número". Se excluyen las
 que aparecen en la página de derogadas o cuyo nombre indica derogación.
@@ -13,9 +17,7 @@ import time
 
 import requests
 
-from core.config import ROOT
-
-DDU_DIR = ROOT / "data" / "ddu"
+from core.config import DDU_DIR
 BASE = "https://www.minvu.gob.cl/elementos-tecnicos/circulares-division-de-desarrollo-urbano-ddu"
 VIGENTES_URL = f"{BASE}/circulares-generales-por-numero/"
 DEROGADAS_URL = f"{BASE}/circulares-derogadas/"
