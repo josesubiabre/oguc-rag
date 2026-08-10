@@ -38,9 +38,9 @@ def build_corpus():
 
 
 def load_existing():
-    """Índice actual como {hash del texto: vector}. Vacío si no hay índice."""
+    """Devuelve ({hash del texto: vector}, fragmentos guardados)."""
     if not VectorStore.exists():
-        return {}, 0
+        return {}, []
     store = VectorStore.load()
     if len(store.chunks) != store.matrix.shape[0]:
         raise SystemExit(
@@ -50,7 +50,7 @@ def load_existing():
     mapa = {}
     for chunk, vector in zip(store.chunks, store.matrix):
         mapa.setdefault(text_key(chunk), vector)
-    return mapa, len(store.chunks)
+    return mapa, store.chunks
 
 
 def main():
@@ -58,7 +58,8 @@ def main():
 
     print("Recalculando corpus desde data/ ...")
     corpus = build_corpus()
-    conocidos, previos = load_existing()
+    conocidos, previos_chunks = load_existing()
+    previos = len(previos_chunks)
 
     pendientes = [c for c in corpus if text_key(c) not in conocidos]
     chars = sum(len(c["text"]) for c in pendientes)
@@ -73,11 +74,17 @@ def main():
         print("\n--dry-run: no se realizó ninguna llamada pagada.")
         return
 
-    if not pendientes:
+    # Los metadatos también cuentan: cambiar una regla de citación no genera
+    # embeddings pendientes, pero sí debe llegar al índice. Sin comparar los
+    # fragmentos guardados contra el corpus, el script cortaba aquí y una
+    # circular seguía citándose "CIR-182" en vez de "Circular DDU 182".
+    if not pendientes and previos_chunks == corpus:
         print("\nNada pendiente: el índice ya está al día.")
         return
+    if not pendientes:
+        print("  sin embeddings nuevos; se reescribe el índice por metadatos")
 
-    if not GEMINI_API_KEY or "pega_tu_key" in GEMINI_API_KEY:
+    if pendientes and (not GEMINI_API_KEY or "pega_tu_key" in GEMINI_API_KEY):
         print("Falta GEMINI_API_KEY en .env")
         return
 

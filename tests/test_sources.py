@@ -57,6 +57,9 @@ def test_circulares_ddu():
     assert source_name(DDU / "DDU-118.pdf") == "Circular DDU 118"
     assert source_name(DDU / "DDU-165-Modificada-por-DDU-446.pdf") == "Circular DDU 165"
     assert source_name(DDU / "Circular-DDU-513-para-publicar.pdf") == "Circular DDU 513"
+    # El MINVU publica algunas con prefijo CIR en vez de DDU: es la misma serie
+    assert source_name(DDU / "CIR-182.pdf") == "Circular DDU 182"
+    assert source_name(DDU / "Cir-231.pdf") == "Circular DDU 231"
 
 
 def test_formularios_solicitudes_y_resoluciones():

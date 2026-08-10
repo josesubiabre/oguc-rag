@@ -86,6 +86,56 @@ def test_ingesta_dos_veces_no_duplica_ni_rellama(tmp_path, monkeypatch):
     assert matriz2.shape[0] == len(CHUNKS), "no debe duplicar fragmentos"
 
 
+def test_cambio_de_metadatos_reescribe_sin_llamar_a_la_api(tmp_path, monkeypatch):
+    """Renombrar una fuente debe llegar al índice, y sin costo.
+
+    El texto no cambia, así que no hay embeddings pendientes; si el script
+    cortara por eso, la cita corregida nunca se aplicaría.
+    """
+    corpus = [dict(c) for c in CHUNKS]
+    monkeypatch.setattr(inc, "STORE_DIR", tmp_path)
+    monkeypatch.setattr(inc, "CHECKPOINT", tmp_path / "incremental_checkpoint.json")
+    monkeypatch.setattr(inc, "build_corpus", lambda: [dict(c) for c in corpus])
+    monkeypatch.setattr(inc, "GEMINI_API_KEY", "clave-de-prueba")
+
+    llamadas = []
+
+    def contar(textos):
+        llamadas.append(len(textos))
+        return _fake_embeddings(textos)
+
+    monkeypatch.setattr(inc, "embed_documents", contar)
+
+    orig_save, orig_load, orig_exists = (
+        VectorStore.save,
+        VectorStore.load,
+        VectorStore.exists,
+    )
+    monkeypatch.setattr(
+        VectorStore, "save",
+        staticmethod(lambda v, c, store_dir=None: orig_save(v, c, tmp_path)),
+    )
+    monkeypatch.setattr(
+        VectorStore, "load", staticmethod(lambda store_dir=None: orig_load(tmp_path))
+    )
+    monkeypatch.setattr(
+        VectorStore, "exists",
+        staticmethod(lambda store_dir=None: orig_exists(tmp_path)),
+    )
+
+    inc.main()
+    llamadas.clear()
+
+    # Solo cambia la cita, no el texto
+    corpus[2]["source"] = "Circular DDU 182"
+    inc.main()
+
+    assert llamadas == [], "renombrar una fuente no puede costar dinero"
+    guardado = VectorStore.load(store_dir=tmp_path)
+    assert guardado.chunks[2]["source"] == "Circular DDU 182"
+    assert guardado.matrix.shape[0] == len(CHUNKS)
+
+
 def test_save_rechaza_desalineacion(tmp_path):
     with pytest.raises(ValueError, match="desalineación"):
         VectorStore.save([[1.0, 0.0]], CHUNKS, store_dir=tmp_path)

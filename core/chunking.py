@@ -88,7 +88,11 @@ def _formulario_name(stem):
 def source_name(path):
     """Nombre legible del documento a partir de su archivo."""
     path = Path(path)
-    m = re.search(r"DDU[-_ ]?(\d+)", path.name, re.IGNORECASE)
+    # El MINVU publica las mismas circulares con dos prefijos, DDU-182 y
+    # CIR-182: sin aceptar ambos, unas se citan bien y otras por nombre de
+    # archivo. "Circular-DDU-513" no confunde a CIR porque tras "Cir" no
+    # viene un número.
+    m = re.search(r"(?:DDU|CIR)[-_ ]?(\d+)", path.name, re.IGNORECASE)
     if m and path.parent.name == "ddu_generales":
         return f"Circular DDU {m.group(1)}"
 
