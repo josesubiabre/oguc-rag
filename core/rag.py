@@ -16,6 +16,7 @@ caer: es preferible una respuesta de calidad algo menor que ninguna.
 from functools import lru_cache
 
 from core.bm25 import Bm25Index
+from core.chunking import es_procedimiento
 from core.config import TOP_K
 from core.embeddings import embed_query
 from core.llm import extractive_answer, generate_answer
@@ -50,6 +51,26 @@ def _rrf(rankings, k):
     return orden[:k]
 
 
+def _reservar_procedimiento(indices, semantico, chunks, k):
+    """Da un lugar al mejor formulario cuando la semántica ya lo eligió.
+
+    RRF premia que un documento aparezca en ambos rankings, y los formularios
+    son fuertes en semántica pero débiles en BM25: su texto son rótulos de
+    campos, no prosa, así que las circulares les ganan aunque estén peor
+    posicionadas en cada lista por separado. Medido sobre el corpus real, en
+    preguntas de procedimiento el mejor formulario aparece entre los puestos
+    4 y 10 de la vía semántica, y en preguntas normativas nunca antes del 25;
+    exigir que esté dentro de CANDIDATES separa ambos casos sin inventar un
+    umbral nuevo. Se reemplaza el último lugar, así el contexto no crece.
+    """
+    if any(es_procedimiento(chunks[i]) for i in indices):
+        return indices
+    mejor = next((i for i in semantico if es_procedimiento(chunks[i])), None)
+    if mejor is None:
+        return indices
+    return indices[: k - 1] + [mejor]
+
+
 def retrieve(question, k=TOP_K):
     """Devuelve (fragmentos, modo). Modo: hybrid | semantic | bm25_fallback."""
     store = _store()
@@ -67,6 +88,7 @@ def retrieve(question, k=TOP_K):
 
     if semantico and lexico:
         modo, indices = "hybrid", _rrf([semantico, lexico], k)
+        indices = _reservar_procedimiento(indices, semantico, store.chunks, k)
     elif semantico:
         modo, indices = "semantic", semantico[:k]
     elif lexico:

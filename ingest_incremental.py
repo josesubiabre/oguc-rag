@@ -133,7 +133,10 @@ def main():
 
     Bm25Index.build(chunks_final).save()
 
-    print(f"\nÍndice actualizado: {previos} → {len(chunks_final)} fragmentos")
+    # Sin caracteres fuera de cp1252: la consola de Windows no los codifica y
+    # una flecha en un mensaje de estado bastaba para abortar el script entero
+    # después de haber pagado y guardado todo el trabajo.
+    print(f"\nIndice actualizado: {previos} -> {len(chunks_final)} fragmentos")
     print(f"Llamadas pagadas realizadas en esta corrida: {llamadas}")
 
 

@@ -45,7 +45,7 @@ def main():
 
         paginas = extract_document(pdf, on_progress=progreso)
         utiles = sum(1 for t in paginas.values() if t and t != "SIN_CONTENIDO")
-        print(f"  listo: {utiles} páginas con contenido → {extracted_path(pdf).name}")
+        print(f"  listo: {utiles} páginas con contenido -> {extracted_path(pdf).name}")
 
     print("\nAhora ejecuta:  python ingest.py")
 
