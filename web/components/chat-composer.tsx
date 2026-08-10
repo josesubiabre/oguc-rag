@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useImperativeHandle, useSyncExternalStore } from "react";
-import { ArrowUp, BookOpen, Plus } from "lucide-react";
+import { ArrowUp, BookOpen } from "lucide-react";
 
 import { Textarea } from "@/components/ui/textarea";
 import { useAutoResizeTextarea } from "@/hooks/use-auto-resize-textarea";
@@ -32,11 +32,15 @@ interface ChatComposerProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
+  onOpenSources: () => void;
   loading: boolean;
 }
 
 export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
-  function ChatComposer({ value, onChange, onSubmit, loading }, ref) {
+  function ChatComposer(
+    { value, onChange, onSubmit, onOpenSources, loading },
+    ref
+  ) {
     const { textareaRef, adjustHeight } = useAutoResizeTextarea({
       minHeight: 48,
       maxHeight: 240,
@@ -83,21 +87,11 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
 
         <div className="flex items-center justify-between px-2 pb-2">
           <div className="flex items-center gap-1">
-            {/* Controles preparados; adquieren función con adjuntos y filtro de fuentes */}
             <button
               type="button"
-              disabled
-              aria-label="Adjuntar (próximamente)"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-text-subtle transition-colors hover:bg-surface-hover disabled:hover:bg-transparent"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-            </button>
-            <span className="h-4 w-px bg-line-subtle" aria-hidden="true" />
-            <button
-              type="button"
-              disabled
-              aria-label="Fuentes normativas (próximamente)"
-              className="flex h-9 items-center gap-2 rounded-lg px-2.5 text-[13px] text-text-secondary transition-colors hover:bg-surface-hover disabled:hover:bg-transparent"
+              onClick={onOpenSources}
+              aria-label="Ver qué normativa cubre Norma"
+              className="flex h-9 items-center gap-2 rounded-lg px-2.5 text-[13px] text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand"
             >
               <BookOpen className="h-4 w-4" aria-hidden="true" />
               Fuentes

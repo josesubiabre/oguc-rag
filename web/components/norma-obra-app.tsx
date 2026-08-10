@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { ChatComposer, ChatComposerHandle } from "@/components/chat-composer";
+import { CoberturaModal } from "@/components/cobertura";
 import {
   LegalDisclaimerModal,
   SHORT_DISCLAIMER,
@@ -23,6 +24,7 @@ export function NormaObraApp() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [legalOpen, setLegalOpen] = useState(false);
+  const [fuentesOpen, setFuentesOpen] = useState(false);
   const composerRef = useRef<ChatComposerHandle>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const { conversations, upsert, remove, get } = useConversations();
@@ -123,6 +125,7 @@ export function NormaObraApp() {
       value={value}
       onChange={setValue}
       onSubmit={ask}
+      onOpenSources={() => setFuentesOpen(true)}
       loading={loading}
     />
   );
@@ -237,6 +240,11 @@ export function NormaObraApp() {
             Aviso legal
           </button>
         </p>
+
+        <CoberturaModal
+          open={fuentesOpen}
+          onClose={() => setFuentesOpen(false)}
+        />
 
         <LegalDisclaimerModal
           open={legalOpen}
