@@ -11,6 +11,10 @@ from core.config import DATA_DIR, MAX_CHUNK_CHARS
 _KNOWN_SOURCES = {
     "oguc": "OGUC",
     "lguc": "LGUC",
+    # Texto consolidado vigente de la LGUC descargado de Ley Chile. Sustituye
+    # a la recopilación del MINVU, que va con casi un año de atraso. El corpus
+    # nunca debe contener las dos: citarían artículos contradictorios.
+    "dto-458": "LGUC",
     "ley-de-copropiedad": "Ley de Copropiedad (21.442)",
     "reglamento-de-la-ley-21442": "Reglamento de la Ley de Copropiedad",
     # Modifica la LGUC después de la recopilación de septiembre 2025, que aún
