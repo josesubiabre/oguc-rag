@@ -5,7 +5,7 @@ Dos capas, ambas opcionales y nunca bloqueantes:
 1. stdout en formato JSON — visible siempre en los logs de Vercel, sin
    configuración ni costo, pero con retención corta.
 2. Upstash Redis (REST) — persistencia real para análisis histórico. Se
-   activa solo si existen UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN.
+   activa solo si hay credenciales REST en el entorno.
 
 No se registra IP, user agent ni identificador de usuario: solo el texto de
 la consulta y métricas de servicio.
@@ -17,8 +17,14 @@ import time
 
 import requests
 
-REDIS_URL = os.getenv("UPSTASH_REDIS_REST_URL", "")
-REDIS_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN", "")
+# Dos convenciones de nombres para las mismas credenciales: UPSTASH_* es la
+# de Upstash directo, KV_REST_API_* la que inyecta la integración de Vercel.
+# Se aceptan ambas para que el origen de la base no obligue a tocar código.
+# El token debe ser el de escritura, no KV_REST_API_READ_ONLY_TOKEN.
+REDIS_URL = os.getenv("UPSTASH_REDIS_REST_URL") or os.getenv("KV_REST_API_URL", "")
+REDIS_TOKEN = os.getenv("UPSTASH_REDIS_REST_TOKEN") or os.getenv(
+    "KV_REST_API_TOKEN", ""
+)
 LIST_KEY = "normaobra:queries"
 MAX_EVENTS = 5000
 
