@@ -13,6 +13,9 @@ _KNOWN_SOURCES = {
     "lguc": "LGUC",
     "ley-de-copropiedad": "Ley de Copropiedad (21.442)",
     "reglamento-de-la-ley-21442": "Reglamento de la Ley de Copropiedad",
+    # Modifica la LGUC después de la recopilación de septiembre 2025, que aún
+    # no la incorpora: se indexa aparte para no dejar el vacío sin cubrir.
+    "ley-21807": "Ley 21.807 (Planificación Territorial)",
     "normativa-de-accesibilidad": "DS 50 Accesibilidad Universal",
     "oguc-ilustrada": "OGUC Ilustrada",
 }

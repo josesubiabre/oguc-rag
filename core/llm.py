@@ -31,6 +31,10 @@ SYSTEM_PROMPT = (
     "trámite. Úsalos para responder qué documentos hay que presentar, "
     "atribuyéndolos siempre al formulario, y nunca los cites como si fueran "
     "una exigencia legal ni les asignes rango de ley o de artículo. "
+    "La recopilación de la LGUC está actualizada a septiembre de 2025 y la "
+    "Ley 21.807, publicada en febrero de 2026, la modificó después: si un "
+    "fragmento de la Ley 21.807 cambia lo que dice uno de la LGUC, prevalece "
+    "la Ley 21.807 y debes advertirlo explícitamente. "
     "Si el contexto no contiene la respuesta, dilo claramente y no inventes."
 )
 
