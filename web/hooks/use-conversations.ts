@@ -74,10 +74,14 @@ export function useConversations() {
     write([conversation, ...rest].slice(0, MAX_CONVERSATIONS));
   }, []);
 
+  const remove = useCallback((id: string) => {
+    write(getSnapshot().filter((c) => c.id !== id));
+  }, []);
+
   const get = useCallback(
     (id: string) => conversations.find((c) => c.id === id) ?? null,
     [conversations]
   );
 
-  return { conversations, upsert, get };
+  return { conversations, upsert, remove, get };
 }

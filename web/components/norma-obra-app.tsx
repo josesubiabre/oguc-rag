@@ -25,7 +25,7 @@ export function NormaObraApp() {
   const [legalOpen, setLegalOpen] = useState(false);
   const composerRef = useRef<ChatComposerHandle>(null);
   const endRef = useRef<HTMLDivElement>(null);
-  const { conversations, upsert, get } = useConversations();
+  const { conversations, upsert, remove, get } = useConversations();
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -100,6 +100,21 @@ export function NormaObraApp() {
     [get]
   );
 
+  const deleteConversation = useCallback(
+    (id: string) => {
+      remove(id);
+      // Si se borra la conversación abierta, la vista quedaría mostrando un
+      // hilo que ya no existe. Se vuelve al estado inicial sin cerrar la barra
+      // lateral, para poder seguir depurando el historial de una vez.
+      if (id === activeId) {
+        setMessages([]);
+        setActiveId(null);
+        setError(null);
+      }
+    },
+    [remove, activeId]
+  );
+
   const hasThread = messages.length > 0;
 
   const composer = (
@@ -118,6 +133,7 @@ export function NormaObraApp() {
         conversations={conversations}
         activeId={activeId}
         onSelectConversation={selectConversation}
+        onDeleteConversation={deleteConversation}
         onNewChat={startNewChat}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}

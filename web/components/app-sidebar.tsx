@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   BookOpen,
+  Check,
   CircleHelp,
   CircleUserRound,
   Code2,
@@ -12,6 +13,7 @@ import {
   Plus,
   Scale,
   Search,
+  Trash2,
 } from "lucide-react";
 
 import { BrandMark, BrandWordmark } from "@/components/brand";
@@ -106,6 +108,7 @@ interface AppSidebarProps {
   conversations: ConversationSummary[];
   activeId: string | null;
   onSelectConversation: (id: string) => void;
+  onDeleteConversation: (id: string) => void;
   onNewChat: () => void;
   mobileOpen: boolean;
   onMobileClose: () => void;
@@ -115,6 +118,7 @@ export function AppSidebar({
   conversations,
   activeId,
   onSelectConversation,
+  onDeleteConversation,
   onNewChat,
   mobileOpen,
   onMobileClose,
@@ -122,6 +126,16 @@ export function AppSidebar({
   const [collapsed, setCollapsed] = useState(false);
   const [query, setQuery] = useState("");
   const [modal, setModal] = useState<"fuentes" | "como" | "legal" | null>(null);
+  // Borrar es irreversible: el historial vive solo en este navegador y no hay
+  // copia en servidor. Se pide un segundo clic en vez de abrir un diálogo,
+  // que para una lista de consultas sería más molesto que protector.
+  const [confirmando, setConfirmando] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!confirmando) return;
+    const t = setTimeout(() => setConfirmando(null), 4000);
+    return () => clearTimeout(t);
+  }, [confirmando]);
 
   const recents = useMemo(
     () =>
@@ -211,17 +225,54 @@ export function AppSidebar({
             </h2>
             <ul className="mt-2">
               {recents.map((c) => (
-                <li key={c.id} className="border-b border-line-subtle last:border-b-0">
+                <li
+                  key={c.id}
+                  className={cn(
+                    "flex items-center rounded-md border-b border-line-subtle transition-colors last:border-b-0 hover:bg-surface-hover",
+                    c.id === activeId && "bg-surface-hover"
+                  )}
+                >
                   <button
                     type="button"
                     onClick={() => onSelectConversation(c.id)}
                     className={cn(
-                      "flex h-11 w-full items-center gap-3 rounded-md px-1 text-left text-[14px] text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand",
-                      c.id === activeId && "bg-surface-hover text-text-primary"
+                      "flex h-11 min-w-0 flex-1 items-center gap-3 rounded-md px-1 text-left text-[14px] text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-brand",
+                      c.id === activeId && "text-text-primary"
                     )}
                   >
                     <MessageSquare className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span className="truncate">{c.title}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirmando === c.id) {
+                        onDeleteConversation(c.id);
+                        setConfirmando(null);
+                      } else {
+                        setConfirmando(c.id);
+                      }
+                    }}
+                    // El estado se anuncia en el nombre accesible: quien no ve
+                    // el cambio de icono debe enterarse igual de que el
+                    // siguiente clic borra.
+                    aria-label={
+                      confirmando === c.id
+                        ? `Confirmar eliminación de «${c.title}»`
+                        : `Eliminar «${c.title}»`
+                    }
+                    className={cn(
+                      "mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-brand",
+                      confirmando === c.id
+                        ? "text-danger"
+                        : "text-text-subtle hover:text-text-primary"
+                    )}
+                  >
+                    {confirmando === c.id ? (
+                      <Check className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    )}
                   </button>
                 </li>
               ))}
