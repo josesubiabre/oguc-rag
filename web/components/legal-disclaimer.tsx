@@ -140,18 +140,6 @@ export function LegalDisclaimerModal({ open, onClose }: LegalDisclaimerModalProp
             en preparación.
           </p>
         </Section>
-
-        <div className="border-t border-line-subtle pt-3 text-[13px]">
-          {/* TODO: reemplazar por el nombre o razón social definitivos */}
-          <p>
-            <span className="text-text-primary">Responsable del servicio:</span>{" "}
-            josesubiabre
-          </p>
-          <p>
-            <span className="text-text-primary">Contacto:</span>{" "}
-            subiabreji@gmail.com
-          </p>
-        </div>
       </div>
     </Modal>
   );
