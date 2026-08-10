@@ -16,7 +16,7 @@ caer: es preferible una respuesta de calidad algo menor que ninguna.
 from functools import lru_cache
 
 from core.bm25 import Bm25Index
-from core.chunking import es_procedimiento
+from core.chunking import es_norma, es_procedimiento
 from core.config import TOP_K
 from core.embeddings import embed_query
 from core.llm import extractive_answer, generate_answer
@@ -24,6 +24,7 @@ from core.store import VectorStore
 
 RRF_K = 60  # constante estándar: amortigua el peso de los primeros puestos
 CANDIDATES = 20  # profundidad de cada ranking antes de fusionar
+CANDIDATOS_NORMA = 10  # ver _reservar_fuentes: medido sobre el corpus real
 
 
 @lru_cache(maxsize=1)
@@ -51,24 +52,48 @@ def _rrf(rankings, k):
     return orden[:k]
 
 
-def _reservar_procedimiento(indices, semantico, chunks, k):
-    """Da un lugar al mejor formulario cuando la semántica ya lo eligió.
+def _reservar(indices, candidatos, chunks, predicado, ranura):
+    """Sustituye una ranura por el mejor candidato semántico que cumpla.
 
-    RRF premia que un documento aparezca en ambos rankings, y los formularios
-    son fuertes en semántica pero débiles en BM25: su texto son rótulos de
-    campos, no prosa, así que las circulares les ganan aunque estén peor
-    posicionadas en cada lista por separado. Medido sobre el corpus real, en
-    preguntas de procedimiento el mejor formulario aparece entre los puestos
-    4 y 10 de la vía semántica, y en preguntas normativas nunca antes del 25;
-    exigir que esté dentro de CANDIDATES separa ambos casos sin inventar un
-    umbral nuevo. Se reemplaza el último lugar, así el contexto no crece.
+    RRF premia que un documento aparezca en ambos rankings, así que un
+    fragmento fuerte en una sola vía pierde contra otros peor posicionados en
+    las dos. Eso deja fuera material que la búsqueda semántica sí había
+    identificado, y hay dos casos donde importa lo suficiente como para
+    reservarle un lugar. Se reemplaza, nunca se agrega: el contexto no crece
+    y el costo por consulta no cambia.
     """
-    if any(es_procedimiento(chunks[i]) for i in indices):
+    if len(indices) < abs(ranura) or any(predicado(chunks[i]) for i in indices):
         return indices
-    mejor = next((i for i in semantico if es_procedimiento(chunks[i])), None)
-    if mejor is None:
+    mejor = next((i for i in candidatos if predicado(chunks[i])), None)
+    if mejor is None or mejor in indices:
         return indices
-    return indices[: k - 1] + [mejor]
+    nuevos = list(indices)
+    nuevos[ranura] = mejor
+    return nuevos
+
+
+def _reservar_fuentes(indices, semantico, chunks):
+    """Garantiza que la respuesta tenga un formulario y una norma si procede.
+
+    Los formularios son fuertes en semántica y débiles en BM25 —su texto son
+    rótulos de campos, no prosa—, así que las circulares les ganan siempre.
+    Con las normas pasa algo parecido pero peor: en una consulta de
+    copropiedad, media docena de circulares antiguas desplazaban a la ley
+    vigente, y el modelo terminaba citando la ley derogada que esas circulares
+    invocan.
+
+    Los umbrales salen de medir el corpus real. Un formulario pertinente
+    aparece entre los puestos 4 y 10 de la vía semántica y en preguntas
+    normativas nunca antes del 25, así que basta exigir que esté dentro de
+    CANDIDATES. Una norma pertinente aparece entre el 1 y el 5, mientras que
+    las que conviene descartar caen del 13 en adelante; CANDIDATOS_NORMA = 10
+    deja margen por ambos lados. Sin ese tope se cuela una norma cualquiera
+    por el solo hecho de ser la mejor de un mal lote.
+    """
+    indices = _reservar(indices, semantico, chunks, es_procedimiento, -1)
+    return _reservar(
+        indices, semantico[:CANDIDATOS_NORMA], chunks, es_norma, -2
+    )
 
 
 def retrieve(question, k=TOP_K):
@@ -88,7 +113,7 @@ def retrieve(question, k=TOP_K):
 
     if semantico and lexico:
         modo, indices = "hybrid", _rrf([semantico, lexico], k)
-        indices = _reservar_procedimiento(indices, semantico, store.chunks, k)
+        indices = _reservar_fuentes(indices, semantico, store.chunks)
     elif semantico:
         modo, indices = "semantic", semantico[:k]
     elif lexico:

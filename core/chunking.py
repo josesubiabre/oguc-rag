@@ -125,6 +125,22 @@ def es_procedimiento(chunk):
     return fuente.startswith(("Formulario MINVU", "Mapa de Formularios"))
 
 
+def es_norma(chunk):
+    """True si el fragmento tiene rango normativo.
+
+    Lo contrario de una circular, un formulario o el manual ilustrado: eso
+    interpreta, tramita o explica, pero no obliga. Se define por descarte
+    para que un cuerpo legal nuevo cuente como norma sin tener que
+    inscribirlo en ninguna lista.
+    """
+    fuente = chunk.get("source", "")
+    return not (
+        es_procedimiento(chunk)
+        or fuente.startswith("Circular DDU")
+        or fuente.startswith("OGUC Ilustrada")
+    )
+
+
 def corpus_files(data_dir=DATA_DIR):
     """Todos los PDF del corpus, ordenados de forma estable.
 

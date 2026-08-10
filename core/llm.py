@@ -18,7 +18,46 @@ from core.config import (
     LLM_MODEL,
 )
 
-SYSTEM_PROMPT = (
+def _avisos_de_vigencia():
+    """Reemplazos normativos que el corpus todavía cita como vigentes.
+
+    Una circular de 2017 puede seguir vigente y aun así invocar una ley
+    derogada: 130 fragmentos citan la Ley 19.537, sustituida en 2022. Sin
+    este aviso el modelo repite la referencia antigua con total aplomo, que
+    es el error que un revisor detecta en el primer párrafo. Los datos viven
+    en el manifiesto para que sumar un caso sea editar un dato, no el código.
+    Si el manifiesto falta, se responde sin el aviso en vez de caer.
+    """
+    try:
+        from core.manifest import cargar
+
+        derogaciones = cargar().get("derogaciones", [])
+    except Exception:
+        return ""
+    if not derogaciones:
+        return ""
+
+    casos = []
+    for d in derogaciones:
+        fecha = "-".join(reversed(d["fecha_reemplazo"].split("-")))
+        caso = (
+            f"La {d['derogada']} ({d['materia']}) fue derogada por la "
+            f"{d['reemplazada_por']} el {fecha}, según el {d['base_legal']}"
+        )
+        if d.get("regla_de_reenvio"):
+            caso += f"; {d['regla_de_reenvio']}"
+        casos.append(caso + ".")
+
+    return (
+        "Vigencia de las referencias: parte del corpus es anterior a reformas "
+        "recientes y cita normas ya derogadas. " + " ".join(casos) + " Si un "
+        "fragmento del contexto invoca una de esas normas derogadas, no la "
+        "presentes como vigente: responde según el cuerpo legal que la "
+        "reemplazó, aplica el reenvío y advierte del cambio. "
+    )
+
+
+_PROMPT_BASE = (
     "Eres un asistente experto en normativa chilena de urbanismo y "
     "construcción: la OGUC, la LGUC, la Ley de Copropiedad, el DS 50 de "
     "accesibilidad, las circulares DDU del MINVU y los Formularios Únicos "
@@ -36,8 +75,11 @@ SYSTEM_PROMPT = (
     "reproduzcas sus instrucciones de reemplazo ni expliques esta regla en tu "
     "respuesta; menciona esa ley solo si te preguntan qué cambió o desde "
     "cuándo. "
-    "Si el contexto no contiene la respuesta, dilo claramente y no inventes."
 )
+
+_CIERRE = "Si el contexto no contiene la respuesta, dilo claramente y no inventes."
+
+SYSTEM_PROMPT = _PROMPT_BASE + _avisos_de_vigencia() + _CIERRE
 
 
 @lru_cache(maxsize=1)

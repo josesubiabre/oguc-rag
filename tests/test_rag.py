@@ -106,39 +106,58 @@ def test_rrf_respeta_el_orden_dentro_de_un_solo_ranking():
     assert fusion == [7, 8, 9]
 
 
-# --- Reserva de un lugar para los formularios (procedimiento) ---
+# --- Reserva de lugar para formularios y para normas ---
 
 FRAGMENTOS_MIXTOS = [
     {"source": "OGUC", "text": "a", "page": 1},
     {"source": "Circular DDU 100", "text": "b", "page": 1},
     {"source": "Formulario MINVU 2-3.1 (Solicitud de Permiso)", "text": "c", "page": 1},
     {"source": "LGUC", "text": "d", "page": 1},
+    {"source": "Circular DDU 200", "text": "e", "page": 1},
+    {"source": "Circular DDU 300", "text": "f", "page": 1},
+    {"source": "OGUC Ilustrada I", "text": "g", "page": 1},
 ]
 
 
 def test_reserva_da_lugar_al_formulario_que_rrf_descarto():
     """Es el caso real: fuerte en semántica, débil en BM25, fuera del top."""
     indices, semantico = [0, 1, 3], [0, 2, 1, 3]
-    assert rag._reservar_procedimiento(indices, semantico, FRAGMENTOS_MIXTOS, 3) == [
-        0,
-        1,
-        2,
-    ]
+    assert rag._reservar_fuentes(indices, semantico, FRAGMENTOS_MIXTOS) == [0, 1, 2]
 
 
 def test_reserva_no_duplica_si_ya_hay_formulario():
     indices = [0, 2, 1]
-    assert rag._reservar_procedimiento(indices, [2, 0, 1], FRAGMENTOS_MIXTOS, 3) == indices
-
-
-def test_reserva_no_interviene_en_preguntas_normativas():
-    """Sin formularios entre los candidatos no se sacrifica ningún resultado."""
-    indices = [0, 1, 3]
-    assert rag._reservar_procedimiento(indices, [0, 1, 3], FRAGMENTOS_MIXTOS, 3) == indices
+    assert rag._reservar_fuentes(indices, [2, 0, 1], FRAGMENTOS_MIXTOS) == indices
 
 
 def test_reserva_no_agranda_el_contexto():
-    """Reemplaza el último lugar: el costo por consulta no puede crecer."""
+    """Reemplaza una ranura: el costo por consulta no puede crecer."""
     indices = [0, 1, 3]
-    salida = rag._reservar_procedimiento(indices, [2], FRAGMENTOS_MIXTOS, 3)
-    assert len(salida) == len(indices)
+    assert len(rag._reservar_fuentes(indices, [2], FRAGMENTOS_MIXTOS)) == len(indices)
+
+
+def test_reserva_rescata_la_norma_sepultada_por_las_circulares():
+    """El caso del cierre de terraza: solo circulares, y la ley vigente fuera.
+
+    Sin esto el modelo responde desde circulares antiguas que citan una ley
+    derogada, sin tener a la vista el texto que la reemplazó.
+    """
+    indices, semantico = [1, 4, 5], [1, 4, 5, 0]
+    assert rag._reservar_fuentes(indices, semantico, FRAGMENTOS_MIXTOS) == [1, 0, 5]
+
+
+def test_reserva_no_fuerza_una_norma_lejana():
+    """Más allá del umbral la norma es la mejor de un mal lote, no una fuente.
+
+    Medido: las normas pertinentes salen en los puestos 1 a 5; las que
+    conviene descartar, del 13 en adelante.
+    """
+    indices = [1, 4, 5]
+    semantico = [1, 4, 5, 1, 4, 5, 1, 4, 5, 1, 0]  # la norma queda en el puesto 11
+    assert rag._reservar_fuentes(indices, semantico, FRAGMENTOS_MIXTOS) == indices
+
+
+def test_el_manual_ilustrado_no_cuenta_como_norma():
+    """Explica la norma, no la establece: no puede ocupar la ranura reservada."""
+    indices, semantico = [1, 4, 5], [1, 4, 5, 6]
+    assert rag._reservar_fuentes(indices, semantico, FRAGMENTOS_MIXTOS) == indices
