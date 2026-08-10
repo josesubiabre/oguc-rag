@@ -22,16 +22,16 @@ def _avisos_de_vigencia():
     """Reemplazos normativos que el corpus todavía cita como vigentes.
 
     Una circular de 2017 puede seguir vigente y aun así invocar una ley
-    derogada: 130 fragmentos citan la Ley 19.537, sustituida en 2022. Sin
-    este aviso el modelo repite la referencia antigua con total aplomo, que
-    es el error que un revisor detecta en el primer párrafo. Los datos viven
-    en el manifiesto para que sumar un caso sea editar un dato, no el código.
-    Si el manifiesto falta, se responde sin el aviso en vez de caer.
+    derogada: 130 fragmentos citan la Ley 19.537, sustituida en 2022. Esta es
+    la primera de tres barreras —aquí, la anotación del contexto y el chequeo
+    de la respuesta—, y cubre el caso en que el modelo razona sobre una norma
+    que no venía en los fragmentos recuperados. Los datos salen de la tabla de
+    vigencia, única fuente, para que sumar un caso sea editar un dato.
     """
     try:
-        from core.manifest import cargar
+        from core.vigencia import derogadas
 
-        derogaciones = cargar().get("derogaciones", [])
+        derogaciones = derogadas()
     except Exception:
         return ""
     if not derogaciones:
@@ -39,9 +39,9 @@ def _avisos_de_vigencia():
 
     casos = []
     for d in derogaciones:
-        fecha = "-".join(reversed(d["fecha_reemplazo"].split("-")))
+        fecha = "-".join(reversed(d["fecha_estado"].split("-")))
         caso = (
-            f"La {d['derogada']} ({d['materia']}) fue derogada por la "
+            f"La {d['norma']} ({d['nombre']}) fue derogada por la "
             f"{d['reemplazada_por']} el {fecha}, según el {d['base_legal']}"
         )
         if d.get("regla_de_reenvio"):
@@ -133,6 +133,16 @@ def generate_answer(question, context):
     except Exception:
         # Saturación o caída de Groq: seguimos con Gemini en vez de fallar
         return _ask_gemini(user_content), "gemini"
+
+
+def corregir_respuesta(instruccion, respuesta, context):
+    """Segunda pasada sobre una respuesta que citó normas derogadas.
+
+    Se reescribe en vez de anexar una advertencia: una nota al pie debajo de
+    un párrafo que afirma lo contrario deja al lector eligiendo cuál creer.
+    """
+    contenido = f"{instruccion}\n\n--- Respuesta a corregir ---\n{respuesta}"
+    return generate_answer(contenido, context)
 
 
 def extractive_answer(hits):

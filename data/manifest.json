@@ -206,17 +206,5 @@
       "en_indice": true,
       "ultima_verificacion": "2026-08-10"
     }
-  ],
-  "derogaciones": [
-    {
-      "derogada": "Ley 19.537",
-      "materia": "copropiedad inmobiliaria",
-      "reemplazada_por": "Ley 21.442",
-      "fecha_reemplazo": "2022-04-13",
-      "base_legal": "artículo 100 de la Ley 21.442",
-      "regla_de_reenvio": "el artículo 101 de la Ley 21.442 dispone que las referencias a la ley derogada se entienden hechas a las disposiciones correspondientes de la nueva ley, y las hechas a las «juntas de vigilancia», a los «comités de administración»",
-      "fragmentos_que_la_citan": 130,
-      "nota": "Las circulares DDU anteriores a 2022 siguen vigentes pero citan la ley derogada; no deben presentarse como norma aplicable sin el reenvío."
-    }
   ]
 }

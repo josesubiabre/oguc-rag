@@ -63,6 +63,7 @@ def log_query(
     error=None,
     provider=None,
     mode=None,
+    correccion_vigencia=False,
 ):
     """Registra una consulta. Nunca lanza: la analítica no puede romper la app."""
     try:
@@ -76,6 +77,10 @@ def log_query(
             event["provider"] = provider
         if mode:
             event["mode"] = mode  # hybrid | semantic | bm25_fallback
+        if correccion_vigencia:
+            # Cuántas respuestas hubo que reescribir por citar norma derogada:
+            # mide si el aviso en el contexto está bastando o no.
+            event["correccion_vigencia"] = True
         if error:
             event["error"] = str(error)[:200]
         if sources:

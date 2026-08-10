@@ -171,23 +171,33 @@ def split_document(path, max_chars=MAX_CHUNK_CHARS):
     Si el documento fue procesado con lectura visual (escaneos), usa esa
     extracción en lugar de la capa de texto, que en esos PDF está vacía.
     """
+    from core.vigencia import citadas_en
     from core.vision import load_extracted
+
+    def etiquetar(chunk):
+        # Se marca en la indexación y no al responder: así el recuperador sabe
+        # que el fragmento arrastra una cita derogada sin volver a analizarlo
+        # en cada consulta.
+        citas = [d["id"] for d in citadas_en(chunk["text"])]
+        if citas:
+            chunk["derogadas"] = citas
+        return chunk
 
     source = source_name(path)
     visual = load_extracted(path)
     if visual is not None:
         # Una página descrita = un fragmento: la descripción ya es una
         # unidad temática coherente y cabe holgadamente en el límite.
-        chunks = [
-            {"text": texto[:max_chars], "page": num, "source": source}
+        return [
+            etiquetar({"text": texto[:max_chars], "page": num, "source": source})
             for num, texto in visual
             if len(texto) >= 50
         ]
-        return chunks
 
     chunks = split_chunks(extract_pages(path), max_chars=max_chars)
     for c in chunks:
         c["source"] = source
+        etiquetar(c)
     return chunks
 
 

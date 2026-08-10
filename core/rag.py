@@ -19,8 +19,14 @@ from core.bm25 import Bm25Index
 from core.chunking import es_norma, es_procedimiento
 from core.config import TOP_K
 from core.embeddings import embed_query
-from core.llm import extractive_answer, generate_answer
+from core.llm import corregir_respuesta, extractive_answer, generate_answer
 from core.store import VectorStore
+from core.vigencia import (
+    anotacion,
+    derogadas,
+    instruccion_de_correccion,
+    referencias_sin_mapear,
+)
 
 RRF_K = 60  # constante estándar: amortigua el peso de los primeros puestos
 CANDIDATES = 20  # profundidad de cada ranking antes de fusionar
@@ -124,8 +130,26 @@ def retrieve(question, k=TOP_K):
     return [store.chunks[i] for i in indices], modo
 
 
+def _contexto(hits):
+    """Arma el contexto anotando los fragmentos que citan normas derogadas.
+
+    El aviso va en el encabezado, junto a la fuente, y nunca dentro del texto
+    del documento: la doctrina se entrega intacta y separada de la advertencia
+    sobre su referencia legal.
+    """
+    tabla = {d["id"]: d for d in derogadas()}
+    partes = []
+    for h in hits:
+        encabezado = f"[{h.get('source', 'OGUC')}, página {h['page']}]"
+        for ident in h.get("derogadas", []):
+            if ident in tabla:
+                encabezado += f"\n{anotacion(tabla[ident])}"
+        partes.append(f"{encabezado}\n{h['text']}")
+    return "\n\n---\n\n".join(partes)
+
+
 def answer(question, k=TOP_K):
-    """Devuelve (texto, fuentes, proveedor, modo de recuperación)."""
+    """Devuelve (texto, fuentes, proveedor, modo, si hubo corrección de vigencia)."""
     hits, modo = retrieve(question, k)
     if not hits:
         return (
@@ -134,11 +158,10 @@ def answer(question, k=TOP_K):
             [],
             "sin_resultados",
             modo,
+            False,
         )
 
-    context = "\n\n---\n\n".join(
-        f"[{h.get('source', 'OGUC')}, página {h['page']}]\n{h['text']}" for h in hits
-    )
+    context = _contexto(hits)
     try:
         text, provider = generate_answer(question, context)
     except Exception:
@@ -146,10 +169,24 @@ def answer(question, k=TOP_K):
         # en vez de un error, porque la búsqueda sí encontró material útil.
         text, provider = extractive_answer(hits), "extractive"
 
+    # Última barrera: aunque el contexto venga anotado, el modelo puede repetir
+    # la cita antigua. Si lo hace sin nombrar la norma que la reemplazó, se
+    # reescribe una sola vez. Cuesta una llamada extra y solo en ese caso.
+    corregida = False
+    pendientes = referencias_sin_mapear(text) if provider != "extractive" else []
+    if pendientes:
+        try:
+            text, provider = corregir_respuesta(
+                instruccion_de_correccion(pendientes), text, context
+            )
+            corregida = True
+        except Exception:
+            pass  # se entrega la respuesta original antes que ninguna
+
     by_source = {}
     for h in hits:
         by_source.setdefault(h.get("source", "OGUC"), set()).add(h["page"])
     sources = [
         {"source": s, "pages": sorted(p)} for s, p in sorted(by_source.items())
     ]
-    return text, sources, provider, modo
+    return text, sources, provider, modo, corregida

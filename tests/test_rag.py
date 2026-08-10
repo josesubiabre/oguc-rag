@@ -44,7 +44,7 @@ def _vector_hacia(i):
 def test_modo_hibrido_cuando_ambos_responden(monkeypatch):
     monkeypatch.setattr(rag, "embed_query", _vector_hacia(0))
     monkeypatch.setattr(rag, "generate_answer", lambda q, c: ("respuesta", "groq"))
-    text, sources, provider, mode = rag.answer("altura de baranda")
+    text, sources, provider, mode, _ = rag.answer("altura de baranda")
     assert mode == "hybrid"
     assert provider == "groq"
     assert sources
@@ -56,7 +56,7 @@ def test_fallback_a_bm25_si_falla_el_embedding(monkeypatch):
 
     monkeypatch.setattr(rag, "embed_query", explota)
     monkeypatch.setattr(rag, "generate_answer", lambda q, c: ("respuesta", "groq"))
-    text, sources, provider, mode = rag.answer("artículo 4.2.7")
+    text, sources, provider, mode, _ = rag.answer("artículo 4.2.7")
     assert mode == "bm25_fallback"
     assert sources, "debe seguir citando fuentes sin embeddings"
     assert "4.2.7" in sources[0]["source"] or sources
@@ -66,7 +66,7 @@ def test_modo_semantico_si_bm25_no_coincide(monkeypatch):
     monkeypatch.setattr(rag, "embed_query", _vector_hacia(1))
     monkeypatch.setattr(rag, "generate_answer", lambda q, c: ("respuesta", "groq"))
     # Consulta sin ninguna palabra del corpus: BM25 no aporta candidatos
-    _, _, _, mode = rag.answer("zzzz qwerty inexistente")
+    _, _, _, mode, _ = rag.answer("zzzz qwerty inexistente")
     assert mode == "semantic"
 
 
@@ -77,7 +77,7 @@ def test_respuesta_extractiva_si_ambos_llm_fallan(monkeypatch):
         raise RuntimeError("Groq y Gemini caídos")
 
     monkeypatch.setattr(rag, "generate_answer", sin_llm)
-    text, sources, provider, mode = rag.answer("altura de baranda")
+    text, sources, provider, mode, _ = rag.answer("altura de baranda")
     assert provider == "extractive"
     assert "temporalmente no" in text  # explica la indisponibilidad
     assert "OGUC" in text  # incluye la trazabilidad al documento
@@ -89,7 +89,7 @@ def test_sin_cobertura_no_inventa(monkeypatch):
         raise RuntimeError("sin embeddings")
 
     monkeypatch.setattr(rag, "embed_query", explota)
-    text, sources, provider, mode = rag.answer("zzzz qwerty inexistente")
+    text, sources, provider, mode, _ = rag.answer("zzzz qwerty inexistente")
     assert provider == "sin_resultados"
     assert sources == []
 

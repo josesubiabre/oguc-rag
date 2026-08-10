@@ -1,0 +1,61 @@
+{
+  "actualizado_al": "2026-08-10",
+  "principio": "Un documento vigente puede citar una norma derogada. La Circular DDU 375 de 2017 sigue siendo doctrina administrativa aplicable aunque invoque la Ley 19.537. El sistema no debe descartar el documento ni repetir su referencia a ciegas: debe conservar la doctrina y mapear la cita al cuerpo legal vigente, diciendo de dónde viene.",
+  "derogadas": [
+    {
+      "id": "ley-19537",
+      "norma": "Ley 19.537",
+      "nombre": "Sobre copropiedad inmobiliaria",
+      "patron": "19[.,]?537",
+      "estado": "derogada",
+      "fecha_estado": "2022-04-13",
+      "reemplazada_por": "Ley 21.442",
+      "base_legal": "artículo 100 de la Ley 21.442",
+      "regla_de_reenvio": "el artículo 101 de la Ley 21.442 dispone que las referencias a la ley derogada se entienden hechas a las disposiciones correspondientes de la nueva ley, y las hechas a las «juntas de vigilancia», a los «comités de administración»",
+      "concordancias": [
+        {
+          "articulo": "13",
+          "equivalente": "artículos 29 y 15 N° 3 de la Ley 21.442",
+          "materia": "construcciones o alteraciones en bienes de dominio común y cambio de su destino",
+          "fundamento": "el artículo 29 de la Ley 21.442 somete esas obras a «autorización de la asamblea extraordinaria conforme al número 3) del cuadro contenido en el artículo 15 de esta ley y el correspondiente permiso por parte de la dirección de obras de la municipalidad respectiva»"
+        },
+        {
+          "articulo": "17",
+          "equivalente": "artículo 15 de la Ley 21.442",
+          "materia": "materias y quórums de la asamblea de copropietarios",
+          "fundamento": "el artículo 15 de la Ley 21.442 contiene el cuadro de materias de asamblea y sus quórums, al que remiten los demás artículos de la ley"
+        }
+      ],
+      "sin_concordancia_verificada": "Para los artículos no listados rige el reenvío general del artículo 101: la referencia se entiende hecha a la disposición correspondiente de la Ley 21.442, sin que este registro afirme cuál es."
+    }
+  ],
+  "modificaciones_oguc": {
+    "nota": "Decretos que han modificado la OGUC desde 2020, según su propio resumen de modificaciones. No están derogados: su contenido ya está incorporado al texto vigente de la OGUC, de modo que citarlos es correcto pero el texto operativo es el de la Ordenanza. Se listan sin patrón de detección porque el número de un D.S. se repite entre años y buscarlo en una respuesta daría falsos positivos.",
+    "decretos": [
+      {"ds": "1", "diario_oficial": "2020-05-29", "materia": "criterios para el establecimiento de un Plan Regulador"},
+      {"ds": "32", "diario_oficial": "2020-06-13", "materia": "Reglamento Especial de Viviendas Económicas"},
+      {"ds": "16", "diario_oficial": "2020-11-18", "materia": "precisa el D.S. N° 14 de 2017"},
+      {"ds": "10", "diario_oficial": "2020-12-17", "vigencia": "2025-05-05", "materia": "trámites y requisitos de permisos"},
+      {"ds": "8", "diario_oficial": "2021-03-29", "materia": "cálculo de distanciamientos para edificación"},
+      {"ds": "11", "diario_oficial": "2021-08-09", "materia": "alturas de edificación para techumbres"},
+      {"ds": "12", "diario_oficial": "2021-09-14", "materia": "estudios de impacto sobre el sistema de movilidad"},
+      {"ds": "13", "diario_oficial": "2022-02-28", "materia": "obras eximidas de permiso de edificación"},
+      {"ds": "57", "diario_oficial": "2023-04-06", "materia": "adecuación a la Ley N° 21.078"},
+      {"ds": "30", "diario_oficial": "2023-05-15", "materia": "normativa de accesibilidad universal"},
+      {"ds": "3", "diario_oficial": "2023-05-15", "materia": "ciclovías"},
+      {"ds": "7", "diario_oficial": "2023-09-28", "materia": "obras siempre admitidas"},
+      {"ds": "22", "diario_oficial": "2024-04-16", "materia": "actualización de normas"},
+      {"ds": "15", "diario_oficial": "2024-05-27", "vigencia": "2025-11-28", "materia": "estándares y normas técnicas de acondicionamiento térmico"},
+      {"ds": "32", "diario_oficial": "2024-07-06", "materia": "norma de excepción"},
+      {"ds": "33", "diario_oficial": "2024-09-30", "materia": "agrega disposición transitoria"},
+      {"ds": "25", "diario_oficial": "2024-11-26", "materia": "acceso a equipamientos vecinales"},
+      {"ds": "2", "diario_oficial": "2025-06-23", "materia": "modifica el artículo 2.1.36"},
+      {"ds": "21", "diario_oficial": "2025-09-26", "materia": "reglamenta los artículos 79 y 80 de la Ley N° 21.442"},
+      {"ds": "28", "diario_oficial": "2026-01-23", "vigencia": "2026-02-23", "materia": "adecuación a la Ley N° 20.582"},
+      {"ds": "4", "diario_oficial": "2026-02-06", "materia": "comprensión y aplicación de las modificaciones introducidas"},
+      {"ds": "29", "diario_oficial": "2026-02-14", "materia": "integración en la planificación"},
+      {"ds": "10", "diario_oficial": "2026-02-23", "materia": "entrada en vigencia diferida"},
+      {"ds": "2", "diario_oficial": "2026-03-16", "materia": "modifica disposición transitoria"}
+    ]
+  }
+}

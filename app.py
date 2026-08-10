@@ -35,7 +35,7 @@ def ask(q: Question):
 
     started = time.time()
     try:
-        text, sources, provider, mode = answer(question)
+        text, sources, provider, mode, corregida = answer(question)
     except Exception as e:
         log_query(question, int((time.time() - started) * 1000), error=e)
         raise HTTPException(503, "El servicio está saturado, intenta de nuevo en unos segundos")
@@ -47,5 +47,6 @@ def ask(q: Question):
         answer_text=text,
         provider=provider,
         mode=mode,
+        correccion_vigencia=corregida,
     )
     return {"answer": text, "sources": sources}
