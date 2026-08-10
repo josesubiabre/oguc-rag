@@ -128,14 +128,18 @@ def es_procedimiento(chunk):
 def corpus_files(data_dir=DATA_DIR):
     """Todos los PDF del corpus, ordenados de forma estable.
 
-    Recorre data/ completo, así que las carpetas que no son fuente deben
-    excluirse aquí: separarlas en el disco no basta para dejarlas fuera.
+    Solo entra lo que esté bajo 01_sources/. Recorrer data/ completo hacía que
+    un PDF dejado por descuido en la raíz se indexara igual, que es justo lo
+    que la estructura busca evitar; la lista de exclusión queda como segunda
+    barrera por si algún día se anidan carpetas derivadas ahí dentro.
     """
-    data_dir = Path(data_dir)
+    raiz = Path(data_dir) / "01_sources"
+    if not raiz.is_dir():
+        return []
     return sorted(
         p
-        for p in data_dir.rglob("*.pdf")
-        if not _FUERA_DEL_CORPUS & set(p.relative_to(data_dir).parts)
+        for p in raiz.rglob("*.pdf")
+        if not _FUERA_DEL_CORPUS & set(p.relative_to(raiz).parts)
     )
 
 

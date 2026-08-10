@@ -122,17 +122,19 @@ def test_desconocido_usa_nombre_de_archivo():
 # --- Alcance del corpus ---
 
 
-def test_corpus_excluye_bandeja_y_archivo(tmp_path):
+def test_corpus_solo_toma_lo_que_esta_en_sources(tmp_path):
     """Separar carpetas en disco no basta: la exclusión vive en el código.
 
-    Sin esto, una versión superada guardada en 90_archive/ volvería al índice
-    y el buscador entregaría dos redacciones del mismo artículo.
+    Sin esto, una versión superada en 90_archive/ —o un PDF dejado suelto en
+    la raíz— volvería al índice y el buscador entregaría dos redacciones del
+    mismo artículo sin forma de saber cuál rige.
     """
     for ruta in [
         "01_sources/normativa_base/lguc/vigente.pdf",
         "00_inbox/recien-bajado.pdf",
         "90_archive/version-superada.pdf",
         "02_processed/text/derivado.pdf",
+        "suelto-en-la-raiz.pdf",
     ]:
         destino = tmp_path / ruta
         destino.parent.mkdir(parents=True, exist_ok=True)
