@@ -9,6 +9,7 @@ __pycache__/
 data/01_sources/interpretacion_oficial/ddu_generales/
 data/01_sources/tramites/formularios_minvu/
 data/01_sources/material_explicativo/oguc_ilustrada/*.pdf
+data/01_sources/instrumentos_territoriales/
 
 # Bandeja de entrada y archivo: no son corpus. Se conserva la carpeta para
 # que la estructura sobreviva a un clon, pero no su contenido — las versiones

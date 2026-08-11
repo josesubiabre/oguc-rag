@@ -26,7 +26,21 @@ _KNOWN_SOURCES = {
 # de entrada sin validar, el archivo de versiones superadas y los artefactos
 # derivados. corpus_files() recorre data/ entero, así que sin esta lista una
 # versión archivada volvería al índice y produciría reglas contradictorias.
-_FUERA_DEL_CORPUS = {"00_inbox", "90_archive", "02_processed", "03_indexes"}
+_FUERA_DEL_CORPUS = {
+    "00_inbox",
+    "90_archive",
+    "02_processed",
+    "03_indexes",
+    # Material de respaldo de un instrumento: memorias explicativas, estudios
+    # y planos. Explican por qué se dictó la norma, no qué obliga.
+    "antecedentes",
+    # TEMPORAL. Los instrumentos comunales solo rigen en su comuna, y el
+    # recuperador todavía no sabe a cuál se refiere la consulta: indexarlos
+    # ahora haría que alguien en otra comuna reciba la altura máxima de
+    # Zapallar como si fuera general. Se quita esta línea cuando exista el
+    # filtro por comuna, no antes.
+    "instrumentos_territoriales",
+}
 
 # Formulario Único Nacional del MINVU: el prefijo del código identifica la
 # actuación ante la DOM y el último dígito el tipo de obra. Se citan con su
