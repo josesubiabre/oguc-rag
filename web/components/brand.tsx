@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** Isotipo de NormaObra: tres planos normativos superpuestos forman una N. */
+/** Isotipo de NormaObra: tres planos rectangulares superpuestos. */
 export function BrandMark({ className }: { className?: string }) {
   return (
     <svg
@@ -10,28 +10,19 @@ export function BrandMark({ className }: { className?: string }) {
       role="img"
       aria-label="NormaObra"
     >
-      {/* Acento: plano central de la N */}
-      <path d="M19 38.5 31.5 55V42.5L19 24Z" fill="var(--brand)" />
       {/* Plano posterior */}
       <path
         d="M8 18.5 28 8.5V43.5L8 53.5V18.5Z"
         stroke="currentColor"
-        strokeWidth="3"
+        strokeWidth="2.75"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Plano central y diagonal que construye la N */}
+      {/* Plano central: acento de marca */}
       <path
         d="M19 23.5 39 13.5V48.5L19 58.5V23.5Z"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M19 23.5 31.5 42.5"
-        stroke="currentColor"
-        strokeWidth="3"
+        stroke="var(--brand)"
+        strokeWidth="2.75"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -39,7 +30,7 @@ export function BrandMark({ className }: { className?: string }) {
       <path
         d="M31.5 27 54 15.75V50.75L31.5 62V27Z"
         stroke="currentColor"
-        strokeWidth="3"
+        strokeWidth="2.75"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
